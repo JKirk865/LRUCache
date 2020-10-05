@@ -4,7 +4,7 @@ using System;
 
 namespace LRUCacheTests
 {
-    public class SimpleLRUNode : LRUNode<int, string>
+    public class SimpleLRUNode : LRUCacheNode<int, string>
     {
         private int _key;
         private string _value;

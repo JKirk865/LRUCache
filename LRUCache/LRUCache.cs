@@ -35,48 +35,6 @@ using System.Runtime.InteropServices;
 namespace LRUCache
 {
 
-    public interface ILRUCacheNode<K, V>
-    {
-        bool IsExpired();
-        bool IsValid { get; set; }
-        K Key { get; }
-        V Value { get; }
-        ILRUCacheNode<K, V> Next { get; set; }
-        DateTime? Expiration { get; set; } 
-    }
-
-    public abstract class LRUNode<K, V> : ILRUCacheNode<K, V>
-    {
-        private ILRUCacheNode<K, V> _next = null;
-        private bool _valid = true;
-        public DateTime? Expiration { get; set; } = null;
-        public ILRUCacheNode<K, V> Next
-        {
-            get => _next;
-            set => _next = value;
-        }
-        public bool IsExpired()
-        {
-            if (Expiration.HasValue && DateTime.Now > Expiration.Value)
-            { 
-                return true;
-            }
-            return false;
-        }
-
-
-        public abstract K Key { get; }
-        public abstract V Value { get; }
-        public bool IsValid
-        {
-            get => _valid;
-            set
-            {
-                _valid = value;
-            }
-        }
-    }
-
     public class LRUCacheConfig
     {
         public int MaximumSize { get; set;} = 10;
