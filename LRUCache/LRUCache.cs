@@ -42,6 +42,8 @@ namespace LRUCache
         public TimeSpan? CleanupInterval { get; set; } = null;
 
     }
+
+
     public class LRUCache<K, V>
     {
         private LRUCacheConfig _config;
@@ -53,6 +55,7 @@ namespace LRUCache
         {
             var nextNode = _head;
             ILRUCacheNode<K, V> prevNode = null;
+            int nodes = 0;
             while (nextNode != null)
             {
                 if (!nextNode.IsExpired() && nextNode.Key.Equals(Item))
@@ -62,13 +65,20 @@ namespace LRUCache
                         prevNode.Next = nextNode.Next;
                     nextNode.Next = _head; // Point this item to the previous Head
                     _head = nextNode; // Make this the new Head
-                    if (_config.Expiration.HasValue) 
+                    if (_config.Expiration.HasValue)
                         nextNode.Expiration = DateTime.Now + _config.Expiration.Value;
                     return nextNode.Value;
                 }
                 prevNode = nextNode;
                 nextNode = nextNode.Next;
+                // Have we traversed too many nodes? 
+                if (++nodes > _config.MaximumSize) {
+                    prevNode.Next = null;
+                    //TBD Will C# release the rest of the nodes?
+                    break;
+                }
             }
+
             throw new KeyNotFoundException(string.Format("Key Not Found: {0}", Item.ToString()));
         }
         public int Count(bool CountExpired = false)
@@ -77,10 +87,15 @@ namespace LRUCache
             var nextNode = _head;
             while (nextNode != null)
             {
-                if (nextNode.IsExpired() && CountExpired)
-                    count++;
+                if (nextNode.IsExpired())
+                {
+                    if (CountExpired)
+                        count++;
+                }
                 else
+                {
                     count++;
+                }
                 nextNode = nextNode.Next;
             }
             return count;
@@ -107,6 +122,47 @@ namespace LRUCache
         /// </summary>
         public void Cleanup()
         {
+            var nextNode = _head;
+            ILRUCacheNode<K, V> prevNode = null;
+            
+            // First prune all the Expired and Invalid Nodes from the Cache.
+            while (nextNode != null)
+            {
+                if (nextNode.IsExpired() || !nextNode.IsValid)
+                {
+                    // Remove this node!
+                    nextNode.IsValid = false;
+                    if (prevNode == null) {
+                        //Remove the First
+                        _head = nextNode  = nextNode.Next;
+                        continue;
+                    }
+                    else
+                    {
+                        //Remove one in the middle
+                        prevNode.Next = nextNode.Next;
+                    }
+
+                }
+                prevNode = nextNode;
+                nextNode = nextNode.Next;
+            }
+
+            //Second Count the valid ones and Prune at the MaximumSize
+            int nodes = 1;
+            nextNode = _head;
+            while (nextNode != null)
+            {
+                prevNode = nextNode;
+                nextNode = nextNode.Next;
+                // Have we traversed too many nodes? 
+                if (++nodes > _config.MaximumSize)
+                {
+                    prevNode.Next = null;
+                    //TBD Will C# release the rest of the nodes?
+                    break;
+                }
+            }
 
         }
 
