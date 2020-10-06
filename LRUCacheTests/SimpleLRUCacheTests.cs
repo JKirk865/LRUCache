@@ -34,8 +34,7 @@ namespace LRUCacheTests
             var list = Cache?.ToList(OnlyValid: false);
             foreach(var i in list)
             {
-                Console.WriteLine("Key:{0}  Value:{1}  IsExpired:{2}  IsValid:{3}",
-                    i.Key, i.Value, i.IsExpired(), i.IsValid);
+                Console.WriteLine("Key:{0}  Value:{1}", i.Item1, i.Item2);
             }
         }
     }
@@ -43,88 +42,67 @@ namespace LRUCacheTests
     [TestClass]
     public class SimpleLRUCacheTests
     {
-        public LRUCache<int, string> MakeRainbowCache(LRUCacheConfig Config)
+        public LRUCache<int, string> MakeRainbowCache(int Capacity)
         {
-            var c = new LRUCache<int, string>(Config);
-            c.AddItem(new SimpleLRUNode(0, "Red"));
-            c.AddItem(new SimpleLRUNode(1, "Orange"));
-            c.AddItem(new SimpleLRUNode(2, "Yellow"));
-            c.AddItem(new SimpleLRUNode(3, "Green"));
-            c.AddItem(new SimpleLRUNode(4, "Blue"));
-            c.AddItem(new SimpleLRUNode(5, "Indigo"));
-            c.AddItem(new SimpleLRUNode(6, "Violet"));
+            var c = new LRUCache<int, string>(Capacity);
+            c.Put(0, "Red");
+            c.Put(1, "Orange");
+            c.Put(2, "Yellow");
+            c.Put(3, "Green");
+            c.Put(4, "Blue");
+            c.Put(5, "Indigo");
+            c.Put(6, "Violet");
             return c;
         }
 
         [TestMethod]
         public void CreateLRUCache1()
         {
-            var config = new LRUCacheConfig();
-            var c = new LRUCache<int, string>(config);
+            var c = new LRUCache<int, string>();
             Console.WriteLine("Created Empty Cache.");
-            Assert.AreEqual(0, c.Count(), 0, "Cahe size is not zero");
-            c.AddItem(new SimpleLRUNode(1, "Red"));
-            Assert.AreEqual(1, c.Count(), 0, "Cahe size is not one");
-            c.AddItem(new SimpleLRUNode(2, "Blue"));
-            Assert.AreEqual(2, c.Count(), 0, "Cahe size is not two");
+            Assert.AreEqual(0, c.Count(), 0, "Cache size is not zero");
+            c.Put(1, "Red");
+            Assert.AreEqual(1, c.Count(), 0, "Cache size is not one");
+            c.Put(2, "Blue");
+            Assert.AreEqual(2, c.Count(), 0, "Cache size is not two");
         }
 
         [TestMethod]
         public void TestFind()
         {
-            var config = new LRUCacheConfig();
-            var c = MakeRainbowCache(config);
-            Assert.AreEqual(7, c.Count(), 0, "Cahe size is not 7");
-            Assert.AreEqual("Red", c.FindItem(0), "Cache did not contain key 0");
-            Assert.AreEqual("Violet", c.FindItem(6), "Cache did not contain key 6");
-            SimpleLRUNode.DumpCache(c);
+            var c = MakeRainbowCache(10);
+            Assert.AreEqual(7, c.Count(), 0, "Cache size is not 7");
+            Assert.AreEqual("Red", c.Get(0), "Cache did not contain key 0");
+            Assert.AreEqual("Violet", c.Get(6), "Cache did not contain key 6");
+            SimpleLRUNode.DumpCache(c, "Least Used to Most Used");
             Console.WriteLine("Test Complete.");
         }
 
         [TestMethod]
-        public void TestMaxSize()
+        public void TestMaxSize_Cleanup()
         {
-            var config = new LRUCacheConfig();
-            config.MaximumSize = 4;
-            var c = MakeRainbowCache(config);
+            var c = MakeRainbowCache(4);
             SimpleLRUNode.DumpCache(c, "After Creation");
-            c.Cleanup();
-            SimpleLRUNode.DumpCache(c, "\nAfter Cleanup");
-            Assert.AreEqual(4, c.Count(), 0, "Cahe size is not 4");
+            Assert.AreEqual(4, c.Count(), 0, "Cache size is not 4");
             Console.WriteLine("Test Complete.");
         }
-
         [TestMethod]
-        public void ExpirationTest1()
+        public void TestMaxSize_Find()
         {
-            var config = new LRUCacheConfig();
-            config.Expiration = new TimeSpan(hours: 0, minutes: 0, seconds: 5);
-            var c = MakeRainbowCache(config);
+            var c = MakeRainbowCache(4);
             SimpleLRUNode.DumpCache(c, "After Creation");
-            System.Threading.Thread.Sleep(10 * 1000); // 10 second
-            c.Cleanup();
-            SimpleLRUNode.DumpCache(c, "\nAfter 10 sec Delay");
-            Assert.AreEqual(0, c.Count(), 0, "Cahe size is not 0");
-            Console.WriteLine("Test Complete.");
-        }
-        [TestMethod]
-        public void ExpirationTest2()
-        {
-            var config = new LRUCacheConfig();
-            config.Expiration = new TimeSpan(hours: 0, minutes: 0, seconds: 5);
-
-            var c = new LRUCache<int, string>(config);
-            c.AddItem(new SimpleLRUNode(0, "Red"));    System.Threading.Thread.Sleep(1 * 1000); // 1 second
-            c.AddItem(new SimpleLRUNode(1, "Orange")); System.Threading.Thread.Sleep(1 * 1000); // 1 second
-            c.AddItem(new SimpleLRUNode(2, "Yellow")); System.Threading.Thread.Sleep(1 * 1000); // 1 second
-            c.AddItem(new SimpleLRUNode(3, "Green"));  System.Threading.Thread.Sleep(1 * 1000); // 1 second
-            c.AddItem(new SimpleLRUNode(4, "Blue"));   System.Threading.Thread.Sleep(1 * 1000); // 1 second
-            c.AddItem(new SimpleLRUNode(5, "Indigo")); System.Threading.Thread.Sleep(1 * 1000); // 1 second
-            c.AddItem(new SimpleLRUNode(6, "Violet")); System.Threading.Thread.Sleep(1 * 1000); // 1 second
-            System.Threading.Thread.Sleep(2 * 1000); // 10 second
-            SimpleLRUNode.DumpCache(c, "\nAfter 2 sec Delay");
-            Assert.AreEqual(2, c.Count(), 0, "Cahe size is not 5");
-            Console.WriteLine("Test Complete.");
+            try
+            {
+                var val = c.Get(0);
+                //Assert.AreEqual(4, c.Count(), 0, "Cache size is not 4");
+            } catch
+            {
+                // Ignore
+            }
+            finally {
+                SimpleLRUNode.DumpCache(c, "\nAfter Find");
+                Console.WriteLine("Test Complete.");
+            }
         }
     }
 }

@@ -30,6 +30,7 @@ namespace LRUCache
     {
         private ILRUCacheNode<K, V> _next = null;
         private bool _valid = true;
+        private bool _expired = false;
         public DateTime? Expiration { get; set; } = null;
         public ILRUCacheNode<K, V> Next
         {
@@ -38,11 +39,12 @@ namespace LRUCache
         }
         public bool IsExpired()
         {
-            if (Expiration.HasValue && DateTime.Now > Expiration.Value)
-            { 
+            if (!_expired && Expiration.HasValue && DateTime.Now > Expiration.Value)
+            {
+                _expired = true;
                 return true;
             }
-            return false;
+            return _expired;
         }
 
 

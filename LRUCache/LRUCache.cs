@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 /*
@@ -29,155 +30,106 @@ using System.Runtime.InteropServices;
  */
 
 /// <summary>
-/// Q -> What namespace for local projects?
-/// Feature -> Cleanup, max size, expiration, multi-thread, github
+/// LRUCache Description
+///   A Least Recently Used (LRU) Cache organizes items in order of use, allowing you to quickly identify which item hasn't been used for the longest amount of time.
+///   To find the least-recently used item, look at the beginning of the linked list. The Key
+
+/// Features
+///   1. Implemented as a Generic, the user may specify Key and Value types in construction.
+///   2. TBD -> Add automatic expitation?
+///   
+/// Goals
+///   1. All operations should be O(1)
+///   2. Thread safe for simultaneous users using a single lock (this is not optimal)
+///   
 /// </summary>
 namespace LRUCache
 {
-
-    public class LRUCacheConfig
-    {
-        public int MaximumSize { get; set;} = 10;
-        public TimeSpan? Expiration { get; set; } = null;
-        public TimeSpan? CleanupInterval { get; set; } = null;
-
-    }
-
-
     public class LRUCache<K, V>
     {
-        private LRUCacheConfig _config;
-        private ILRUCacheNode<K,V> _head = null;
+        public int capacity { get; private set; } // Capacity can not be changed once it is specified in the constructor
+        private LinkedList<K> cache = new LinkedList<K>(); // Holds the Keys in order from (FRONT) least used to (Last) recently used/added.
+        private Dictionary<K, V> items = new Dictionary<K, V>(); // Holds the Value and expiration time for the Keys. Un-ordered.
+        private object cache_lock = new object();
 
-        public LRUCache(LRUCacheConfig config) { _config = config; }
+        public LRUCache(int Capacity = 10)
+        {
+            this.capacity = Capacity;
+        }
         
-        public V FindItem(K Item)
-        {
-            var nextNode = _head;
-            ILRUCacheNode<K, V> prevNode = null;
-            int nodes = 0;
-            while (nextNode != null)
-            {
-                if (!nextNode.IsExpired() && nextNode.Key.Equals(Item))
-                {
-                    // Found Match. Move to Front of list, update expiration time, return value
-                    if (prevNode != null)
-                        prevNode.Next = nextNode.Next;
-                    nextNode.Next = _head; // Point this item to the previous Head
-                    _head = nextNode; // Make this the new Head
-                    if (_config.Expiration.HasValue)
-                        nextNode.Expiration = DateTime.Now + _config.Expiration.Value;
-                    return nextNode.Value;
-                }
-                prevNode = nextNode;
-                nextNode = nextNode.Next;
-                // Have we traversed too many nodes? 
-                if (++nodes > _config.MaximumSize) {
-                    prevNode.Next = null;
-                    //TBD Will C# release the rest of the nodes?
-                    break;
-                }
-            }
-
-            throw new KeyNotFoundException(string.Format("Key Not Found: {0}", Item.ToString()));
-        }
-        public int Count(bool CountExpired = false)
-        {
-            int count = 0;
-            var nextNode = _head;
-            while (nextNode != null)
-            {
-                if (nextNode.IsExpired())
-                {
-                    if (CountExpired)
-                        count++;
-                }
-                else
-                {
-                    count++;
-                }
-                nextNode = nextNode.Next;
-            }
-            return count;
-        }
-
         /// <summary>
-        /// Adds a new Node to the front of the cache.
-        /// Note: It allows duplicate keys in the cache but only the most recent;;y added should be found.
+        /// Get a Value by the provide Key. This method does not change the size of the list so there is no need to 
         /// </summary>
-        /// <param name="Item"></param>
-        public void AddItem(ILRUCacheNode<K, V> Item)
+        /// <param name="key">Required, may not be null</param>
+        /// <returns></returns>
+        public V Get(K key)
         {
-            Item.Next = _head; // Point this item to the previous Head
-            _head = Item; // Make this the new Head
-            // Update the Expiration information if provided
-             if (_config.Expiration.HasValue)
-                Item.Expiration = DateTime.Now + _config.Expiration.Value;
-            else
-                Item.Expiration = null;
-        }
-
-        /// <summary>
-        /// Remove Expired and Excess items
-        /// </summary>
-        public void Cleanup()
-        {
-            var nextNode = _head;
-            ILRUCacheNode<K, V> prevNode = null;
+            if (key == null)
+                throw new ArgumentNullException(); 
             
-            // First prune all the Expired and Invalid Nodes from the Cache.
-            while (nextNode != null)
+            lock (cache_lock)
             {
-                if (nextNode.IsExpired() || !nextNode.IsValid)
+                V value;
+                if (items.TryGetValue(key, out value) == true)
                 {
-                    // Remove this node!
-                    nextNode.IsValid = false;
-                    if (prevNode == null) {
-                        //Remove the First
-                        _head = nextNode  = nextNode.Next;
-                        continue;
-                    }
-                    else
-                    {
-                        //Remove one in the middle
-                        prevNode.Next = nextNode.Next;
-                    }
 
-                }
-                prevNode = nextNode;
-                nextNode = nextNode.Next;
-            }
-
-            //Second Count the valid ones and Prune at the MaximumSize
-            int nodes = 1;
-            nextNode = _head;
-            while (nextNode != null)
-            {
-                prevNode = nextNode;
-                nextNode = nextNode.Next;
-                // Have we traversed too many nodes? 
-                if (++nodes > _config.MaximumSize)
-                {
-                    prevNode.Next = null;
-                    //TBD Will C# release the rest of the nodes?
-                    break;
+                    cache.Remove(key); // Remove it from the someplace in the list
+                    cache.AddLast(key); // Add it to the END of the list
+                    return value;
                 }
             }
 
+            throw new KeyNotFoundException(string.Format("Key Not Found: {0}", key.ToString()));
         }
 
-        public List<ILRUCacheNode<K, V>> ToList(bool OnlyValid = true)
+        public int Count()
         {
-            var list = new List<ILRUCacheNode<K, V>>();
-            var nextNode = _head;
-            while (nextNode != null)
+            lock (cache_lock)
             {
-                if (!OnlyValid)
-                    list.Add(nextNode);
-                else if (nextNode.IsValid && !nextNode.IsExpired())
-                    list.Add(nextNode);
+                return cache.Count;
+            }
+        }
 
-                nextNode = nextNode.Next;
+        public void Put(K key, V Value)
+        {
+            if ((key == null) || (Value == null))
+                throw new ArgumentNullException();
+
+            lock (cache_lock)
+            {
+                // Does the Key already exist? If so just update the value and move it to end of the list.
+                // This operation can not change the list of the list so we don't care about capacity.
+                if (items.ContainsKey(key) == true)
+                {
+                    items[key] = Value; // Update the value 
+                    cache.Remove(key); // Remove it from the someplace in the list
+                    cache.AddLast(key); // Add it to the END of the list
+                    return;
+                }
+
+                // Add new Node
+                items[key] = Value;
+                cache.AddLast(key); // Add it to the END of the list
+
+                if (cache.Count > capacity)
+                {
+                    // Remove the first item from Cache and it's sibling Value in items becasue it's the oldest
+                    items.Remove(cache.First.Value);
+                    cache.RemoveFirst();
+                }
+            }
+        }
+
+        public List<Tuple<K, V>> ToList()
+        {
+            var list = new List<Tuple<K, V>>();
+            lock (cache_lock)
+            {
+                foreach (var i in cache)
+                {
+                    var t = new Tuple<K, V>(i, items[i]);
+                    list.Add(t);
+                }
             }
             return list;
         }
