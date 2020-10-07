@@ -50,7 +50,7 @@ namespace LRUCache
     {
         public int Capacity { get; private set; } // Capacity can not be changed once it is specified in the constructor
         private LinkedList<K> cache = new LinkedList<K>(); // Holds the Keys in order from (FRONT) least used to (Last) recently used/added.
-        private Dictionary<K, V> items = new Dictionary<K, V>(); // Holds the Value and expiration time for the Keys. Un-ordered.
+        private Dictionary<K, V> items = new Dictionary<K, V>();        // Holds the Key/Value for O(1) lookup.
         private object cache_lock = new object();
 
         public LRUCache_lock(int capacity = 10)
