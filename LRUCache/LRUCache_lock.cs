@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Runtime.InteropServices;
-
+﻿#region license
 /*
  * MIT License
  * 
@@ -28,35 +22,52 @@ using System.Runtime.InteropServices;
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#endregion
 
-/// <summary>
-/// LRUCache Description
-///   A Least Recently Used (LRU) Cache organizes items in order of use, allowing you to quickly identify which item hasn't been used for the longest amount of time.
-///   To find the least-recently used item, look at the beginning of the linked list. The Key
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
-/// Features
-///   1. Implemented as a Generic, the user may specify Key and Value types in construction.
-///   2. TBD -> Add automatic expitation?
-///   
-/// Goals
-///   1. All operations should be O(1)
-///   2. Thread safe for simultaneous users using a single lock (this is not optimal)
-///   
-/// </summary>
 namespace LRUCache
 {
-    public class LRUCache<K, V>
+    /// <summary>
+    /// LRUCache Description
+    ///   A Least Recently Used (LRU) Cache organizes items in order of use, allowing you to quickly identify which item hasn't been used for the longest amount of time.
+    ///   To find the least-recently used item, look at the beginning of the linked list. The Key
+
+    /// Features
+    ///   1. Implemented as a Generic, the user may specify Key and Value types in construction.
+    ///   2. TBD -> Add automatic expiration?
+    ///   3. TBD -> Add better multi-threaded support. Current implentation is not very good
+    /// Goals
+    ///   1. All operations should be O(1)
+    ///   2. Thread safe for simultaneous users using a single lock (this is not optimal)   
+    /// </summary>
+    /// 
+    /// <typeparam name="K">Key</typeparam>
+    /// <typeparam name="V">Value</typeparam>
+    public class LRUCache_lock<K, V> : ILRUCache<K, V>
     {
-        public int capacity { get; private set; } // Capacity can not be changed once it is specified in the constructor
+        public int Capacity { get; private set; } // Capacity can not be changed once it is specified in the constructor
         private LinkedList<K> cache = new LinkedList<K>(); // Holds the Keys in order from (FRONT) least used to (Last) recently used/added.
         private Dictionary<K, V> items = new Dictionary<K, V>(); // Holds the Value and expiration time for the Keys. Un-ordered.
         private object cache_lock = new object();
 
-        public LRUCache(int Capacity = 10)
+        public LRUCache_lock(int capacity = 10)
         {
-            this.capacity = Capacity;
+            Capacity = capacity;
         }
-        
+
+        public int Count
+        {
+            get
+            {
+                lock (cache_lock)
+                {
+                    return cache.Count;
+                }
+            }
+        }
         /// <summary>
         /// Get a Value by the provide Key. This method does not change the size of the list so there is no need to 
         /// </summary>
@@ -65,8 +76,8 @@ namespace LRUCache
         public V Get(K key)
         {
             if (key == null)
-                throw new ArgumentNullException(); 
-            
+                throw new ArgumentNullException();
+
             lock (cache_lock)
             {
                 V value;
@@ -82,13 +93,7 @@ namespace LRUCache
             throw new KeyNotFoundException(string.Format("Key Not Found: {0}", key.ToString()));
         }
 
-        public int Count()
-        {
-            lock (cache_lock)
-            {
-                return cache.Count;
-            }
-        }
+
 
         public void Put(K key, V Value)
         {
@@ -111,7 +116,8 @@ namespace LRUCache
                 items[key] = Value;
                 cache.AddLast(key); // Add it to the END of the list
 
-                if (cache.Count > capacity)
+                // Check to see if the cache has reached it's capacity
+                if (cache.Count > Capacity)
                 {
                     // Remove the first item from Cache and it's sibling Value in items becasue it's the oldest
                     items.Remove(cache.First.Value);
@@ -120,14 +126,15 @@ namespace LRUCache
             }
         }
 
-        public List<Tuple<K, V>> ToList()
+        public List<KeyValuePair<K, V>> ToList()
         {
-            var list = new List<Tuple<K, V>>();
+            var list = new List<KeyValuePair<K, V>>();
             lock (cache_lock)
             {
+                // Loop from least used to Most Used
                 foreach (var i in cache)
                 {
-                    var t = new Tuple<K, V>(i, items[i]);
+                    var t = new KeyValuePair<K, V>(i, items[i]);
                     list.Add(t);
                 }
             }

@@ -23,7 +23,7 @@ namespace LRUCacheTests
 
         public override string Value => _value;
 
-        static public void DumpCache(LRUCache<int, string> Cache, string Title = null)
+        static public void DumpCache(ILRUCache<int, string> Cache, string Title = null)
         {
             if (Title != null)
             {
@@ -31,20 +31,18 @@ namespace LRUCacheTests
                 Console.WriteLine("++++++++++++++++++++++");
             }
             
-            var list = Cache?.ToList(OnlyValid: false);
+            var list = Cache?.ToList();
             foreach(var i in list)
             {
-                Console.WriteLine("Key:{0}  Value:{1}", i.Item1, i.Item2);
+                Console.WriteLine("Key:{0}  Value:{1}", i.Key, i.Value);
             }
         }
     }
 
-    [TestClass]
-    public class SimpleLRUCacheTests
+    public class LRUCacheTestHelpers
     {
-        public LRUCache<int, string> MakeRainbowCache(int Capacity)
+        static public void AddRainbowItems(ILRUCache<int, string> c)
         {
-            var c = new LRUCache<int, string>(Capacity);
             c.Put(0, "Red");
             c.Put(1, "Orange");
             c.Put(2, "Yellow");
@@ -52,26 +50,36 @@ namespace LRUCacheTests
             c.Put(4, "Blue");
             c.Put(5, "Indigo");
             c.Put(6, "Violet");
+        }
+    }
+    [TestClass]
+    public class SimpleLRUCacheTests
+    {
+        public ILRUCache<int, string> MakeRainbowCache_lock(int Capacity)
+        {
+            var c = new LRUCache_lock<int, string>(Capacity);
+            LRUCacheTestHelpers.AddRainbowItems(c);
             return c;
         }
 
         [TestMethod]
-        public void CreateLRUCache1()
+        public void CreateLRUCache_lock()
         {
-            var c = new LRUCache<int, string>();
+            var c = new LRUCache_lock<int, string>();
             Console.WriteLine("Created Empty Cache.");
-            Assert.AreEqual(0, c.Count(), 0, "Cache size is not zero");
+            Assert.AreEqual(0, c.Count, 0, "Cache size is not zero");
             c.Put(1, "Red");
-            Assert.AreEqual(1, c.Count(), 0, "Cache size is not one");
+            Assert.AreEqual(1, c.Count, 0, "Cache size is not one");
             c.Put(2, "Blue");
-            Assert.AreEqual(2, c.Count(), 0, "Cache size is not two");
+            Assert.AreEqual(2, c.Count, 0, "Cache size is not two");
+            Console.WriteLine("lock Test Complete.");
         }
 
         [TestMethod]
         public void TestFind()
         {
-            var c = MakeRainbowCache(10);
-            Assert.AreEqual(7, c.Count(), 0, "Cache size is not 7");
+            var c = MakeRainbowCache_lock(10);
+            Assert.AreEqual(7, c.Count, 0, "Cache size is not 7");
             Assert.AreEqual("Red", c.Get(0), "Cache did not contain key 0");
             Assert.AreEqual("Violet", c.Get(6), "Cache did not contain key 6");
             SimpleLRUNode.DumpCache(c, "Least Used to Most Used");
@@ -81,25 +89,89 @@ namespace LRUCacheTests
         [TestMethod]
         public void TestMaxSize_Cleanup()
         {
-            var c = MakeRainbowCache(4);
+            var c = MakeRainbowCache_lock(4);
             SimpleLRUNode.DumpCache(c, "After Creation");
-            Assert.AreEqual(4, c.Count(), 0, "Cache size is not 4");
+            Assert.AreEqual(4, c.Count, 0, "Cache size is not 4");
             Console.WriteLine("Test Complete.");
         }
         [TestMethod]
         public void TestMaxSize_Find()
         {
-            var c = MakeRainbowCache(4);
+            var c = MakeRainbowCache_lock(4);
             SimpleLRUNode.DumpCache(c, "After Creation");
             try
             {
                 var val = c.Get(0);
-                //Assert.AreEqual(4, c.Count(), 0, "Cache size is not 4");
+                //Assert.AreEqual(4, c.Count, 0, "Cache size is not 4");
             } catch
             {
                 // Ignore
             }
             finally {
+                SimpleLRUNode.DumpCache(c, "\nAfter Find");
+                Console.WriteLine("Test Complete.");
+            }
+        }
+    }
+
+    [TestClass]
+    public class SimpleLRUCacheTests_lockfree
+    {
+        public ILRUCache<int, string> MakeRainbowCache_lockfree(int Capacity)
+        {
+            var c = new LRUCache_lockfree<int, string>(Capacity);
+            LRUCacheTestHelpers.AddRainbowItems(c);
+            return c;
+        }
+
+        [TestMethod]
+        public void CreateLRUCache_lockfree()
+        {
+            var c = new LRUCache_lockfree<int, string>();
+            Console.WriteLine("Created Empty Cache.");
+            Assert.AreEqual(0, c.Count, 0, "Cache size is not zero");
+            c.Put(1, "Red");
+            Assert.AreEqual(1, c.Count, 0, "Cache size is not one");
+            c.Put(2, "Blue");
+            Assert.AreEqual(2, c.Count, 0, "Cache size is not two");
+            Console.WriteLine("lockfree Test Complete.");
+
+        }
+        [TestMethod]
+        public void TestFind()
+        {
+            var c = MakeRainbowCache_lockfree(10);
+            Assert.AreEqual(7, c.Count, 0, "Cache size is not 7");
+            Assert.AreEqual("Red", c.Get(0), "Cache did not contain key 0");
+            Assert.AreEqual("Violet", c.Get(6), "Cache did not contain key 6");
+            SimpleLRUNode.DumpCache(c, "Least Used to Most Used");
+            Console.WriteLine("Test Complete.");
+        }
+
+        [TestMethod]
+        public void TestMaxSize_Cleanup()
+        {
+            var c = MakeRainbowCache_lockfree(4);
+            SimpleLRUNode.DumpCache(c, "After Creation");
+            Assert.AreEqual(4, c.Count, 0, "Cache size is not 4");
+            Console.WriteLine("Test Complete.");
+        }
+        [TestMethod]
+        public void TestMaxSize_Find()
+        {
+            var c = MakeRainbowCache_lockfree(4);
+            SimpleLRUNode.DumpCache(c, "After Creation");
+            try
+            {
+                var val = c.Get(0);
+                //Assert.AreEqual(4, c.Count, 0, "Cache size is not 4");
+            }
+            catch
+            {
+                // Ignore
+            }
+            finally
+            {
                 SimpleLRUNode.DumpCache(c, "\nAfter Find");
                 Console.WriteLine("Test Complete.");
             }
