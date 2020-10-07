@@ -33,7 +33,7 @@ namespace LRUCache
     /// <summary>
     /// LRUCache Description
     ///   A Least Recently Used (LRU) Cache organizes items in order of use, allowing you to quickly identify which item hasn't been used for the longest amount of time.
-    ///   To find the least-recently used item, look at the beginning of the linked list. The Key
+    ///   To find the least-recently used item, look at the beginning of the linked list.
 
     /// Features
     ///   1. Implemented as a Generic, the user may specify Key and Value types in construction.

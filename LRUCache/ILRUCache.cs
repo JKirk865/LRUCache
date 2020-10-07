@@ -16,4 +16,15 @@ namespace LRUCache
         void Put(TKey key, TValue value);
         public List<KeyValuePair<TKey, TValue>> ToList(); // I chose not to use IEnumerable for threading reasons
     }
+
+    //public interface ILRUCache2<N, TKey, TValue> where N : ILRUCacheItem<TKey, TValue>
+    public interface ILRUCache2<N, TKey>
+    {
+        int Capacity { get; }
+        int Count { get; }
+        N Get(TKey key);
+        void Put(N item);
+        public List<N> ToList(); // I chose not to use IEnumerable for threading reasons
+    }
+
 }

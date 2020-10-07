@@ -25,6 +25,7 @@
 #endregion
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,10 +33,45 @@ using LockFreeDoublyLinkedLists;
 
 namespace LRUCache
 {
+
+    public interface ILRUCacheItem<K, V>
+                        where K : IComparable<K>
+                        //where V : IEqualityComparer
+    {
+        K Key { get; }
+        V Value { get; set; }
+    }
+
+#if true
+    public class LRUCacheItem<K, V> : ILRUCacheItem<K, V>
+                                where K : IComparable<K>
+    {
+        public K Key { get; private set; }
+        public V Value { get; set; }
+
+        public LRUCacheItem(K key, V value)
+        {
+            Key = key;
+            Value = value;
+        }
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            LRUCacheItem<K, V> objAsLid = obj as LRUCacheItem<K, V>;
+
+            return Key.Equals(objAsLid.Key) && Value.Equals(objAsLid.Value);
+        }
+    }
+#endif
+
     /// <summary>
     /// LRUCache Description
     ///   A Least Recently Used (LRU) Cache organizes items in order of use, allowing you to quickly identify which item hasn't been used for the longest amount of time.
-    ///   To find the least-recently used item, look at the beginning of the linked list. The Key
+    ///   To find the least-recently used item, look at the beginning of the linked list.
 
     /// Features
     ///   1. Implemented as a Generic, the user may specify Key and Value types in construction.
@@ -48,15 +84,18 @@ namespace LRUCache
     /// 
     /// <typeparam name="K">Key</typeparam>
     /// <typeparam name="V">Value</typeparam>
-    public class LRUCache_lockfree : ILRUCache<int, string>
+    public class LRUCache_lockfree<N, K, V> : ILRUCache2<N, K> 
+                                            where N : LRUCacheItem<K, V>
+                                            where K : IComparable<K>
+                                            //where V : IEqualityComparer
     {
         public int Capacity { get; private set; } // Capacity can not be changed once it is specified in the constructor
         
         // This is the doubly linked list that tracks the ORDER of the items. Left is more recent, Right is oldest.
-        private ILockFreeDoublyLinkedList<CacheItem> cache = LockFreeDoublyLinkedList.Create<CacheItem>();
-        // Holds the Key/Value for O(1) lookup.
-        private ConcurrentDictionary<int, ILockFreeDoublyLinkedListNode<CacheItem>> items = 
-            new ConcurrentDictionary<int, ILockFreeDoublyLinkedListNode<CacheItem>>(); 
+        private ILockFreeDoublyLinkedList<N> cache = LockFreeDoublyLinkedList.Create<N>();
+        // Holds the Key/Value for O(1) lookup, holds the CacheItem for O(1) Removal
+        private ConcurrentDictionary<K, ILockFreeDoublyLinkedListNode<N>> items = 
+            new ConcurrentDictionary<K, ILockFreeDoublyLinkedListNode<N>>(); 
 
         public LRUCache_lockfree(int capacity = 10)
         {
@@ -66,55 +105,47 @@ namespace LRUCache
         {
             get => cache.Count();
         }
-        
-        private void RemoveFromCache(int key)
-        {
-        }
 
         /// <summary>
         /// Get a Value by the provide Key. This method does not change the size of the list so there is no need to 
         /// </summary>
         /// <param name="key">Required, may not be null</param>
         /// <returns></returns>
-        public string Get(int key)
+        public N Get(K key)
         {
             if (key == null)
                 throw new ArgumentNullException();
 
-            //lock (cache_lock)
+            ILockFreeDoublyLinkedListNode<N> value;
+            if (items.TryGetValue(key, out value) == true)
             {
-                ILockFreeDoublyLinkedListNode<CacheItem> value;
-                if (items.TryGetValue(key, out value) == true)
-                {
-
-                    value.Remove(); // Remove it from the someplace in the list
-                    cache.PushLeft(value.Value); // Add it to the left side
-                    return value.Value.Value;
-                }
+                value.Remove(); // Remove it from the someplace in the list
+                value = cache.PushLeft(value.Value); // Add it to the left side
+                return value.Value;
             }
 
             throw new KeyNotFoundException(string.Format("Key Not Found: {0}", key.ToString()));
         }
 
-        public void Put(int key, string value)
+        public void Put(N item)
         {
-            if ((key == null) || (value == null))
+            if (item == null)
                 throw new ArgumentNullException();
 
             // Does the Key already exist? If so just update the value and move it to end of the list.
             // This operation can not change the list of the list so we don't care about capacity.
-            ILockFreeDoublyLinkedListNode<CacheItem> valueNode;
-            if (items.TryGetValue(key, out valueNode) == true)
+            ILockFreeDoublyLinkedListNode<N> valueNode;
+            if (items.TryGetValue(item.Key, out valueNode) == true)
             {
-                valueNode.Value.Value = value; // Update the value 
+                valueNode.Value.Value = item.Value; // Update the value 
                 valueNode.Remove(); // Remove it from the someplace in the list
                 cache.PushLeft(valueNode.Value); // Add it to the left side
                 return;
             }
 
             // Add new Node
-            valueNode = cache.PushLeft(new CacheItem(key, value)); // Add it to the Left side of the list
-            items[key] = valueNode;
+            valueNode = cache.PushLeft(item); // Add it to the Left side of the list
+            items[item.Key] = valueNode;
                 
             // Check to see if the cache has reached it's capacity
             if (cache.Count() > Capacity)
@@ -132,41 +163,18 @@ namespace LRUCache
             }
         }
 
-        public List<KeyValuePair<int, string>> ToList()
+        public List<N> ToList()
         {
-            var list = new List<KeyValuePair<int, string>>();
+            var list = new List<N>();
             
             // Loop from least used to Most Used
-            foreach (CacheItem i in cache)
+            foreach (N i in cache)
             {
-                var t = new KeyValuePair<int, string>(i.Key, i.Value);
-                list.Add(t);
+                list.Add(i);
             }
             return list;
         }
 
-        internal class CacheItem
-        {
-            public int Key { get; private set; }
-            public string Value { get; set; }
 
-            public CacheItem(int key, string value)
-            {
-                Key = key;
-                Value = value;
-            }
-            public override bool Equals(object obj)
-            {
-                if (obj == null || GetType() != obj.GetType())
-                {
-                    return false;
-                }
-
-                CacheItem objAsLid = obj as CacheItem;
-
-                return Key == objAsLid.Key
-                    && Value == objAsLid.Value;
-            }
-        }
     }
 }
