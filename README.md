@@ -27,6 +27,12 @@ A fast O(1) implemented as a generic allowing the user to define their on Key/Va
 us of a lock free doubly linked list class that I did not write.
 
 ## Performance
+Surprisingly the "LRUCache_lock" has better single and multi-threaded performance than I expected. It is simpler
+and if you are looking to use an LRUCache I would start with this one.
+
+The "LRUCache_nolock" performance is better for lots(50+) of threads. I plamn to investigate this further and see
+if I can idenentify any additional bottlenecks. I initially found that the Count() operation was very expensive and
+now use an Interlocked.Increment to keep track of the size.
 
 ##Usage Examples
 
