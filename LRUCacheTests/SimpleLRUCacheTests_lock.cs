@@ -72,7 +72,7 @@ namespace LRUCacheTests
         public void RemoveTest()
         {
             var c = new LRUCache_lock<SimpleLRUCacheItem, int, string>(10);
-            RemoveTest(c);
+            RemoveOneTest(c);
         }
         [TestMethod]
         public void ManyPuts10k()

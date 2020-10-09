@@ -70,7 +70,7 @@ namespace LRUCacheTests
             Assert.AreEqual(numItems, c.Count, 0, "Cache size changed");
         }
 
-        public void RemoveTest(ILRUCache<SimpleLRUCacheItem, int> c)
+        public void RemoveOneTest(ILRUCache<SimpleLRUCacheItem, int> c)
         {
             var dog = new SimpleLRUCacheItem(10, "Dog");
             c.Put(dog);
@@ -86,7 +86,6 @@ namespace LRUCacheTests
             {
                 // OK!
             }
-
         }
 
         /// <summary>

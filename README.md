@@ -4,29 +4,29 @@ A C# .Net Core implementation of a LRUCache with UnitTests.
 ## What is an LRU Cache?
 A Least Recently Used (LRU) Cache organizes items in order of use, allowing you to quickly identify which
 item hasn't been used for the longest amount of time. It is a common cache to use when the backing store is slow and
-the application frequently retrieves the same information by unique key frequently.
+the application frequently retrieves the same information (by a unique key) frequently.
 
 ## Why did I develop this code?
-I was asking to develop an LRU Cache in an technical interview but at that time I was not familiar with the concept,
-so it does not go well. I was looking for a suitable project to investigate new-to-me C# concepts and selected this.
+I was asked to develop an LRU Cache in an technical interview but at that time I was not familiar with the concept. I was
+looking for a suitable project to investigate new-to-me C# concepts and selected this.
 
 ## History of the project
 
 **Version 1**
 A singly linked list that was not thread safe and had poor O(N) performance issues. This version is buried deep
-in the repo history and has no business bring reviewed.
+in the repo history and has no business being reviewed.
 
 **LRUCache_lock**
 A fast O(1) implemented as a generic allowing the user to define their own key/value structure. While this version
 is thread-safe it does so with a single lock shared for all the operations.  But, it is still faster than the
 "LRUCache_nolock" version discussed below until the user applies MANY asynchronous operations. When my first linked list
-implementation had such poor performance I investigated other architecture and found this inspiration from a developer *"yozaam"* 
+implementation had such poor performance I investigated other architectures and found this inspiration from a developer *"yozaam"* 
 (https://www.youtube.com/watch?v=zDknUrGFoxI&t) 
 
 **LRUCache_nolock**
 A fast O(1) implemented as a generic allowing the user to define their on Key/Value structure. This implementation is
-"lock free" and more ideal for highly multi-threaded users. It architecture is the same the  "LRUCache_lock" but makes
-us of a lock free doubly linked list class that I did not write. The underlying data structure is borrowed from
+"lock free" and more ideal for highly multi-threaded users. It architecture is the same as "LRUCache_lock" but makes
+use of a lock free doubly linked list class that I did not write. The underlying data structure is borrowed from
 *https://github.com/c7hm4r/LockFreeDoublyLinkedList* which is C# .Net Core 2.0 implementation of the paper
 *Lock-free deques and doubly linked lists” by Håkan Sundell and Philippas Tsigas (2008)*.
 
@@ -45,7 +45,7 @@ stored twice but the performance is much better than a single linked list could 
 
 ## Usage
 **First**
-Define the object to be cached and inherit from the LRUCacheItem. The key must be comparable(i.e. int, Guid)
+Define the object to be cached and inherit from the LRUCacheItem class. The key must be comparable(i.e. int, Guid)
 ```
     public class SimpleLRUCacheItem : LRUCacheItem<int, string>
     {
@@ -74,7 +74,7 @@ Instantiate the class but be sure to use the ILRUCache so you can change which i
     List<SimpleLRUCacheItem> itemList = c.ToList(); // Note, the first item in the list is the oldest
 ```
 ## Unit Tests
-For now the unit tests are just the ad hoc test ideas I had during development to target specific areas. Additional unit tests
+For now the unit tests are just ad hoc test ideas I had during development to target specific areas. Additional unit tests
 could be added in the future to ensure 100% code coverage.
 
 ## Future Features
