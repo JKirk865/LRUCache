@@ -78,4 +78,7 @@ For now the unit tests are just ad hoc test ideas I had during development to ta
 could be added in the future to ensure 100% code coverage.
 
 ## Future Features
-1. Add expiration date to each node, handy to ensure cache'd item is not too old
+1. Add expiration date to each node, handy to ensure cache'd item is not too old.
+2. Compare this implementation with the others on NuGet.
+
+![Class Diagram](/ClassDiagram.png)
