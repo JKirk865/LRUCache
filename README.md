@@ -40,8 +40,9 @@ now use an *Interlocked.Increment* to keep track of the size.
 
 ## Usage Examples
 
-**First define the object to be cached and inherit from the LRUCacheItem. The key must be comparable(int, Guid, etc.)**
-    ```
+**First**
+Define the object to be cached and inherit from the LRUCacheItem. The key must be comparable(I.E. int, Guid)
+```
     public class SimpleLRUCacheItem : LRUCacheItem<int, string>
     {
         public SimpleLRUCacheItem(int key, string value)
@@ -50,9 +51,9 @@ now use an *Interlocked.Increment* to keep track of the size.
             // Nothing to do here
         }
     }
-    ```
-
-**Second Instantiate the class but be sure to use the ILRUCache so you can change which implementation you are using.**
+```
+**Second**
+Instantiate the class but be sure to use the ILRUCache so you can change which implementation you are using.**
        ILRUCache<SimpleLRUCacheItem, int> c = new LRUCache_lockfree<SimpleLRUCacheItem, int, string>(int Capacity = 10);
        The generic takes three arguments:
          N => The object to be cached
