@@ -81,5 +81,5 @@ could be added in the future to ensure 100% code coverage.
 1. Add expiration date to each node, handy to ensure cache'd item is not too old.
 2. Compare this implementation with the others on NuGet.
 
-##Class Diagram
+## Class Diagram
 ![Class Diagram](/ClassDiagram.png)
