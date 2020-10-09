@@ -28,7 +28,7 @@ A fast O(1) implemented as a generic allowing the user to define their on Key/Va
 "lock free" and more ideal for highly multi-threaded users. It architecture is the same the  "LRUCache_lock" but makes
 us of a lock free doubly linked list class that I did not write. The underlying data structure is borrowed from
 *https://github.com/c7hm4r/LockFreeDoublyLinkedList* which is C# .Net Core 2.0 implementation of the paper
-*“Lock-free deques and doubly linked lists” by Håkan Sundell and Philippas Tsigas (2008)*.
+*Lock-free deques and doubly linked lists” by Håkan Sundell and Philippas Tsigas (2008)*.
 
 ## Performance
 Surprisingly the "LRUCache_lock" implementation has better single and multi-threaded performance than I expected. It is simpler
@@ -40,7 +40,8 @@ now use an *Interlocked.Increment* to keep track of the size.
 
 ## Usage Examples
 
-** First define the object to be cached and inherit from the LRUCacheItem. The key must be comparable(int, Guid, etc.)
+**First define the object to be cached and inherit from the LRUCacheItem. The key must be comparable(int, Guid, etc.)
+    ```c#
     public class SimpleLRUCacheItem : LRUCacheItem<int, string>
     {
         public SimpleLRUCacheItem(int key, string value)
@@ -49,8 +50,9 @@ now use an *Interlocked.Increment* to keep track of the size.
             // Nothing to do here
         }
     }
+    ```
 
-** Second Instantiate the class but be sure to use the ILRUCache so you can change which implementation you are using.
+**Second Instantiate the class but be sure to use the ILRUCache so you can change which implementation you are using.
        ILRUCache<SimpleLRUCacheItem, int> c = new LRUCache_lockfree<SimpleLRUCacheItem, int, string>();
        The generic takes three arguments:
        N => The object to be cached
