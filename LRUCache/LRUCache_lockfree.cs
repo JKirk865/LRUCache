@@ -6,20 +6,7 @@ using LockFreeDoublyLinkedLists;
 
 namespace LRUCache
 {
-    /// <summary>
-    /// LRUCache Description
-    ///   A Least Recently Used (LRU) Cache organizes items in order of use, allowing you to quickly identify which item hasn't been used for the longest amount of time.
-    ///   To find the least-recently used item, look at the beginning of the linked list.
-
-    /// Features
-    ///   1. Implemented as a Generic, the user may specify Key and Value types in construction.
-    ///   2. TBD -> Add automatic expiration?
-    ///   3. TBD -> Add better multi-threaded support. Current implentation is not very good
-    /// Goals
-    ///   1. All operations should be O(1)
-    ///   2. Thread safe for simultaneous users using a single lock (this is not optimal)   
-    /// </summary>
-    /// 
+    /// <typeparam name="N">The Object that will be cached that contained the Key and Value</typeparam>
     /// <typeparam name="K">Key</typeparam>
     /// <typeparam name="V">Value</typeparam>
     public class LRUCache_lockfree<N, K, V> : ILRUCache<N, K> 
@@ -33,7 +20,7 @@ namespace LRUCache
         // Holds the Key/Value for O(1) lookup, holds the CacheItem for O(1) Removal
         private ConcurrentDictionary<K, ILockFreeDoublyLinkedListNode<N>> items = 
             new ConcurrentDictionary<K, ILockFreeDoublyLinkedListNode<N>>();
-        private int NumRecords = 0;
+        private int NumRecords = 0; // The performance for items.Count() is AWFUL, using my own.
 
         public LRUCache_lockfree(int capacity = 10)
         {
@@ -41,15 +28,10 @@ namespace LRUCache
         }
         public int Count
         {
-            // The performance for Count() for items and cache is AWFUL, using my own.
+            
             get => NumRecords;
         }
 
-        /// <summary>
-        /// Get a Value by the provide Key. This method does not change the size of the list so there is no need to 
-        /// </summary>
-        /// <param name="key">Required, may not be null</param>
-        /// <returns></returns>
         public N Get(K key)
         {
             if (key == null)
@@ -72,7 +54,7 @@ namespace LRUCache
                 throw new ArgumentNullException();
 
             // Does the Key already exist? If so just update the value and move it to end of the list.
-            // This operation can not change the list of the list so we don't care about capacity.
+            // The cache size does not change.
             ILockFreeDoublyLinkedListNode<N> valueNode;
             if (items.TryGetValue(item.Key, out valueNode) == true)
             {
@@ -89,7 +71,7 @@ namespace LRUCache
             // Check to see if the cache has reached it's capacity
             if (Count > Capacity)
             {
-                // Remove the last item from Cache and it's sibling Value in items becasue it's the oldest
+                // Remove the last item from Cache and it's sibling Value in items because it's the oldest
                 valueNode = cache.Tail;
                 while (valueNode.IsDummyNode)
                     valueNode = valueNode.Prev;
@@ -102,7 +84,20 @@ namespace LRUCache
                 }
             }
         }
+        public bool Remove(K key)
+        {
+            if (key == null)
+                throw new ArgumentNullException();
 
+            ILockFreeDoublyLinkedListNode<N> valueNode;
+            if (items.TryRemove(key, out valueNode) == true)
+            {
+                valueNode.Remove(); // Remove it from the someplace in the list
+                return true;
+            }
+
+            return false;
+        }
         public List<N> ToList()
         {
             var list = new List<N>();

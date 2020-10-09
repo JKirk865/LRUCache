@@ -4,20 +4,7 @@ using System.Collections.Generic;
 
 namespace LRUCache
 {
-    /// <summary>
-    /// LRUCache Description
-    ///   A Least Recently Used (LRU) Cache organizes items in order of use, allowing you to quickly identify which item hasn't been used for the longest amount of time.
-    ///   To find the least-recently used item, look at the beginning of the linked list.
-
-    /// Features
-    ///   1. Implemented as a Generic, the user may specify Key and Value types in construction.
-    ///   2. TBD -> Add automatic expiration?
-    ///   3. TBD -> Add better multi-threaded support. Current implentation is not very good
-    /// Goals
-    ///   1. All operations should be O(1)
-    ///   2. Thread safe for simultaneous users using a single lock (this is not optimal)   
-    /// </summary>
-    /// 
+    /// <typeparam name="N">The Object that will be cached that contained the Key and Value</typeparam>
     /// <typeparam name="K">Key</typeparam>
     /// <typeparam name="V">Value</typeparam>
     public class LRUCache_lock<N, K, V> : ILRUCache<N, K>
@@ -27,7 +14,7 @@ namespace LRUCache
         public int Capacity { get; private set; } // Capacity can not be changed once it is specified in the constructor
         private LinkedList<K> cache = new LinkedList<K>();  // Holds the Keys in order from (FRONT) least used to (Last) recently used/added.
         private Dictionary<K, N> items = new Dictionary<K, N>(); // Holds the Key/Value for O(1) lookup.
-        private object cache_lock = new object();
+        private object cache_lock = new object(); // Used to ensure thread-safe operations
 
         public LRUCache_lock(int capacity = 10)
         {
@@ -52,11 +39,7 @@ namespace LRUCache
                 items.Clear();
             }
         }
-        /// <summary>
-        /// Get a Value by the provide Key. This method does not change the size of the list so there is no need to 
-        /// </summary>
-        /// <param name="key">Required, may not be null</param>
-        /// <returns></returns>
+
         public N Get(K key)
         {
             if (key == null)
@@ -85,7 +68,7 @@ namespace LRUCache
             lock (cache_lock)
             {
                 // Does the Key already exist? If so just update the value and move it to end of the list.
-                // This operation can not change the list of the list so we don't care about capacity.
+                // Cache size is not changed.
                 if (items.ContainsKey(item.Key) == true)
                 {
                     items[item.Key].Value = item.Value; // Update the value 
@@ -117,7 +100,6 @@ namespace LRUCache
             {
                 if (items.Remove(key) == true)
                 {
-
                     cache.Remove(key); // Remove it from the someplace in the list
                     return true;
                 }
