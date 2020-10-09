@@ -1,71 +1,11 @@
-﻿#region license
-/*
- * MIT License
- * 
- * Copyright (c) 2020 Jerry L. Kirk
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-#endregion
-
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using LockFreeDoublyLinkedLists;
 
 namespace LRUCache
 {
-    public interface ILRUCacheItem<K, V>
-                        where K : IComparable<K>
-                        //where V : IEqualityComparer
-    {
-        K Key { get; }
-        V Value { get; set; }
-    }
-
-    public class LRUCacheItem<K, V> : ILRUCacheItem<K, V>
-                                where K : IComparable<K>
-    {
-        public K Key { get; private set; }
-        public V Value { get; set; }
-
-        public LRUCacheItem(K key, V value)
-        {
-            Key = key;
-            Value = value;
-        }
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            LRUCacheItem<K, V> objAsLid = obj as LRUCacheItem<K, V>;
-
-            return Key.Equals(objAsLid.Key) && Value.Equals(objAsLid.Value);
-        }
-    }
-
     /// <summary>
     /// LRUCache Description
     ///   A Least Recently Used (LRU) Cache organizes items in order of use, allowing you to quickly identify which item hasn't been used for the longest amount of time.
@@ -143,8 +83,7 @@ namespace LRUCache
             }
 
             // Add new Node to the two data structures
-            valueNode = cache.PushLeft(item); // Add it to the Left side of the list
-            items[item.Key] = valueNode;
+            items[item.Key] = cache.PushLeft(item); // Add it to the Left side of the list
             Interlocked.Increment(ref NumRecords);
 
             // Check to see if the cache has reached it's capacity

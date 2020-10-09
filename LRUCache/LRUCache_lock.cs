@@ -1,30 +1,4 @@
-﻿#region license
-/*
- * MIT License
- * 
- * Copyright (c) 2020 Jerry L. Kirk
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-#endregion
-
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -70,6 +44,14 @@ namespace LRUCache
                 }
             }
         }
+        public void Clear()
+        {
+            lock (cache_lock)
+            {
+                cache.Clear();
+                items.Clear();
+            }
+        }
         /// <summary>
         /// Get a Value by the provide Key. This method does not change the size of the list so there is no need to 
         /// </summary>
@@ -94,8 +76,6 @@ namespace LRUCache
 
             throw new KeyNotFoundException(string.Format("Key Not Found: {0}", key.ToString()));
         }
-
-
 
         public void Put(N item)
         {
@@ -126,6 +106,24 @@ namespace LRUCache
                     cache.RemoveFirst();
                 }
             }
+        }
+
+        public bool Remove(K key)
+        {
+            if (key == null)
+                throw new ArgumentNullException();
+
+            lock (cache_lock)
+            {
+                if (items.Remove(key) == true)
+                {
+
+                    cache.Remove(key); // Remove it from the someplace in the list
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public List<N> ToList()

@@ -24,6 +24,7 @@ namespace LRUCacheTests
             Assert.AreEqual(1, c.Count, 0, "Cache size is not one");
             c.Put(new SimpleLRUCacheItem(2, "Blue"));
             Assert.AreEqual(2, c.Count, 0, "Cache size is not two");
+            SimpleLRUCacheTests_lockfree.DumpCache(c, "Most Used/ Recently added to Least used/Oldest ");
             Console.WriteLine("lock Test Complete.");
         }
 

@@ -73,7 +73,7 @@ namespace LRUCacheTests
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="c">Expected to be empty, capacity xconstraint may impact performance</param>
+        /// <param name="c">Expected to be empty, capacity constraint may impact performance</param>
         /// <param name="NumPuts"></param>
         public void ManyPuts(ILRUCache<SimpleLRUCacheItem, int> c, int NumPuts=1000)
         {

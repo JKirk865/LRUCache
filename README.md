@@ -19,11 +19,13 @@ in the repo history and has business bring reviewed.
 **LRUCache_lock**
 A fast O(1) implemented as a generic allowing the user to define their on Key/Value structure. While this version
 is thread-safe it does so with a single lock shared for all thge operations.  But, it is till overall faster than the
-"LRUCache_nolock" version discused below until the user applies MANY asynchronous operations.
+"LRUCache_nolock" version discused below until the user applies MANY asynchronous operations. When my first linked list
+implementation had such poor performance I investigated other architecture and got inspirtation from a developer "yozaam" 
+(https://www.youtube.com/watch?v=zDknUrGFoxI&t) 
 
 **LRUCache_nolock**
 A fast O(1) implemented as a generic allowing the user to define their on Key/Value structure. This implementation is
-"locl free" and more ideal for highly multiu-threaed use. It archtecture is the same the  "LRUCache_lock" but makes
+"local free" and more ideal for highly multiu-threaed use. It archtecture is the same the  "LRUCache_lock" but makes
 us of a lock free doubly linked list class that I did not write.
 
 ## Performance
@@ -31,8 +33,20 @@ Surprisingly the "LRUCache_lock" has better single and multi-threaded performanc
 and if you are looking to use an LRUCache I would start with this one.
 
 The "LRUCache_nolock" performance is better for lots(50+) of threads. I plamn to investigate this further and see
-if I can idenentify any additional bottlenecks. I initially found that the Count() operation was very expensive and
-now use an Interlocked.Increment to keep track of the size.
+if I can idenentify any additional bottlenecks. I initially found that the *Count* operation was very expensive and
+now use an *Interlocked.Increment* to keep track of the size.
 
-##Usage Examples
+## Usage Examples
+
+## Unit Tests
+For now the unit tests are just the ad hoc test ideas I had during development to target specific areas. For complete unit tests
+could probably be done int he future to ensure 10% code coverage.
+
+## Architecture
+
+## Future Features
+1. Add expiration date to each node, handy to ensure cache'd item is not too old
+2. Remove node, handy if the node neds to be removed because the underlying data item was changed
+3. Clear all nodes
+
 
