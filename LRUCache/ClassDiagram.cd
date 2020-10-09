@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="LRUCache.LRUCache_lock&lt;N, K, V&gt;">
+    <Position X="7.5" Y="2" Width="2" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAABAAAgABASCAAAAAAAAAAgAAABAAAg=</HashCode>
+      <FileName>LRUCache_lock.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.1" />
+  </Class>
+  <Class Name="LRUCache.LRUCache_lockfree&lt;N, K, V&gt;">
+    <Position X="10.5" Y="3.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAEAAABAAAgAAAQCAAAAAAAAAAgAAAAAAAg=</HashCode>
+      <FileName>LRUCache_lockfree.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.1" />
+  </Class>
+  <Class Name="LRUCache.LRUCacheItem&lt;K, V&gt;">
+    <Position X="5" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQAgAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>LRUCacheItem.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="System.Object" Collapsed="true">
+    <Position X="4.75" Y="0.75" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Interface Name="LRUCache.ILRUCache&lt;N, TKey&gt;">
+    <Position X="2" Y="1.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAABAAAAAAAQCAAAAAAAAAAgAAAAAAAg=</HashCode>
+      <FileName>ILRUCache.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="LRUCache.ILRUCacheItem&lt;K, V&gt;">
+    <Position X="2" Y="4.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>LRUCacheItem.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

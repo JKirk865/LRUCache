@@ -18,7 +18,7 @@ namespace LRUCacheTests
         [TestMethod]
         public void CreateLRUCache_lockfree()
         {
-            var c = new LRUCache_lockfree<SimpleLRUCacheItem, int, string>();
+            ILRUCache<SimpleLRUCacheItem, int> c = new LRUCache_lockfree<SimpleLRUCacheItem, int, string>();
             Console.WriteLine("Created Empty Cache.");
             Assert.AreEqual(0, c.Count, 0, "Cache size is not zero");
             c.Put(new SimpleLRUCacheItem(1, "Red"));
