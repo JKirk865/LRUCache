@@ -3,14 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30523.141
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRUCache", "LRUCache\LRUCache.csproj", "{28300EA6-0A22-4BE3-AEE9-7659C87E3678}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LRUCache", "LRUCache\LRUCache.csproj", "{28300EA6-0A22-4BE3-AEE9-7659C87E3678}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LRUCacheTests", "LRUCacheTests\LRUCacheTests.csproj", "{EEBEDDC2-3DF9-4BE9-9AD4-5BD742FBBCFB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LRUCacheTests", "LRUCacheTests\LRUCacheTests.csproj", "{EEBEDDC2-3DF9-4BE9-9AD4-5BD742FBBCFB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2F0EBED5-7F72-4BD5-BB2B-674463AC61E4}"
 	ProjectSection(SolutionItems) = preProject
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
+		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
 EndProject
