@@ -17,4 +17,16 @@ A singley linked list that was not thread safe and had poor O(N) performance iss
 in the repo history and has business bring reviewed.
 
 **LRUCache_lock**
-A fast O(1) implemented as a generic allowing the user to define their on Key/Value structure.
+A fast O(1) implemented as a generic allowing the user to define their on Key/Value structure. While this version
+is thread-safe it does so with a single lock shared for all thge operations.  But, it is till overall faster than the
+"LRUCache_nolock" version discused below until the user applies MANY asynchronous operations.
+
+**LRUCache_nolock**
+A fast O(1) implemented as a generic allowing the user to define their on Key/Value structure. This implementation is
+"locl free" and more ideal for highly multiu-threaed use. It archtecture is the same the  "LRUCache_lock" but makes
+us of a lock free doubly linked list class that I did not write.
+
+## Performance
+
+##Usage Examples
+
