@@ -29,11 +29,11 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using LockFreeDoublyLinkedLists;
 
 namespace LRUCache
 {
-
     public interface ILRUCacheItem<K, V>
                         where K : IComparable<K>
                         //where V : IEqualityComparer
@@ -42,7 +42,6 @@ namespace LRUCache
         V Value { get; set; }
     }
 
-#if true
     public class LRUCacheItem<K, V> : ILRUCacheItem<K, V>
                                 where K : IComparable<K>
     {
@@ -66,7 +65,6 @@ namespace LRUCache
             return Key.Equals(objAsLid.Key) && Value.Equals(objAsLid.Value);
         }
     }
-#endif
 
     /// <summary>
     /// LRUCache Description
@@ -84,10 +82,9 @@ namespace LRUCache
     /// 
     /// <typeparam name="K">Key</typeparam>
     /// <typeparam name="V">Value</typeparam>
-    public class LRUCache_lockfree<N, K, V> : ILRUCache2<N, K> 
+    public class LRUCache_lockfree<N, K, V> : ILRUCache<N, K> 
                                             where N : LRUCacheItem<K, V>
                                             where K : IComparable<K>
-                                            //where V : IEqualityComparer
     {
         public int Capacity { get; private set; } // Capacity can not be changed once it is specified in the constructor
         
@@ -95,7 +92,8 @@ namespace LRUCache
         private ILockFreeDoublyLinkedList<N> cache = LockFreeDoublyLinkedList.Create<N>();
         // Holds the Key/Value for O(1) lookup, holds the CacheItem for O(1) Removal
         private ConcurrentDictionary<K, ILockFreeDoublyLinkedListNode<N>> items = 
-            new ConcurrentDictionary<K, ILockFreeDoublyLinkedListNode<N>>(); 
+            new ConcurrentDictionary<K, ILockFreeDoublyLinkedListNode<N>>();
+        private int NumRecords = 0;
 
         public LRUCache_lockfree(int capacity = 10)
         {
@@ -103,7 +101,8 @@ namespace LRUCache
         }
         public int Count
         {
-            get => cache.Count();
+            // The performance for Count() for items and cache is AWFUL, using my own.
+            get => NumRecords;
         }
 
         /// <summary>
@@ -129,7 +128,7 @@ namespace LRUCache
 
         public void Put(N item)
         {
-            if (item == null)
+            if ((item == null) || (item.Key == null) || (item.Value == null))
                 throw new ArgumentNullException();
 
             // Does the Key already exist? If so just update the value and move it to end of the list.
@@ -143,12 +142,13 @@ namespace LRUCache
                 return;
             }
 
-            // Add new Node
+            // Add new Node to the two data structures
             valueNode = cache.PushLeft(item); // Add it to the Left side of the list
             items[item.Key] = valueNode;
-                
+            Interlocked.Increment(ref NumRecords);
+
             // Check to see if the cache has reached it's capacity
-            if (cache.Count() > Capacity)
+            if (Count > Capacity)
             {
                 // Remove the last item from Cache and it's sibling Value in items becasue it's the oldest
                 valueNode = cache.Tail;
@@ -159,6 +159,7 @@ namespace LRUCache
                 if (success)
                 {
                     cache.PopRightNode();
+                    Interlocked.Decrement(ref NumRecords);
                 }
             }
         }
@@ -174,7 +175,5 @@ namespace LRUCache
             }
             return list;
         }
-
-
     }
 }

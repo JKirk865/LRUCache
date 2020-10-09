@@ -1,29 +1,42 @@
 using LRUCache;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace LRUCacheTests
 {
-    public class LRUCacheTestHelpers
+    public class SimpleLRUCacheItem : LRUCacheItem<int, string>
     {
-
-    }
-    [TestClass]
-    public class SimpleLRUCacheTests
-    {
-        static public void AddRainbowItems(ILRUCache<int, string> c)
+        public SimpleLRUCacheItem(int key, string value)
+            : base(key, value)
         {
-            c.Put(0, "Red");
-            c.Put(1, "Orange");
-            c.Put(2, "Yellow");
-            c.Put(3, "Green");
-            c.Put(4, "Blue");
-            c.Put(5, "Indigo");
-            c.Put(6, "Violet");
+            // Nothing to do here
+        }
+    }
+
+ 
+    public abstract class SimpleLRUCacheTests
+    {
+        Random random = new Random(Guid.NewGuid().GetHashCode());
+
+        public SimpleLRUCacheTests()
+        {
+            // TBD
+        }
+        static public void AddRainbowItems(ILRUCache<SimpleLRUCacheItem, int> c)
+        {
+            c.Put(new SimpleLRUCacheItem(0, "Red"));
+            c.Put(new SimpleLRUCacheItem(1, "Orange"));
+            c.Put(new SimpleLRUCacheItem(2, "Yellow"));
+            c.Put(new SimpleLRUCacheItem(3, "Green"));
+            c.Put(new SimpleLRUCacheItem(4, "Blue"));
+            c.Put(new SimpleLRUCacheItem(5, "Indigo"));
+            c.Put(new SimpleLRUCacheItem(6, "Violet"));
         }
 
-        static public void DumpCache(ILRUCache<int, string> Cache, string Title = null)
+        static public void DumpCache(ILRUCache<SimpleLRUCacheItem, int> Cache, string Title = null)
         {
             if (Title != null)
             {
@@ -37,63 +50,82 @@ namespace LRUCacheTests
                 Console.WriteLine("Key:{0}  Value:{1}", i.Key, i.Value);
             }
         }
-        
-        public ILRUCache<int, string> MakeRainbowCache_lock(int Capacity)
-        {
-            var c = new LRUCache_lock<int, string>(Capacity);
-            SimpleLRUCacheTests.AddRainbowItems(c);
-            return c;
-        }
 
-        [TestMethod]
-        public void CreateLRUCache_lock()
-        {
-            var c = new LRUCache_lock<int, string>();
-            Console.WriteLine("Created Empty Cache.");
-            Assert.AreEqual(0, c.Count, 0, "Cache size is not zero");
-            c.Put(1, "Red");
-            Assert.AreEqual(1, c.Count, 0, "Cache size is not one");
-            c.Put(2, "Blue");
-            Assert.AreEqual(2, c.Count, 0, "Cache size is not two");
-            Console.WriteLine("lock Test Complete.");
-        }
-
-        [TestMethod]
-        public void TestFind()
-        {
-            var c = MakeRainbowCache_lock(10);
+        public void TestFind(ILRUCache<SimpleLRUCacheItem, int> c)
+        {            
             Assert.AreEqual(7, c.Count, 0, "Cache size is not 7");
-            Assert.AreEqual("Red", c.Get(0), "Cache did not contain key 0");
-            Assert.AreEqual("Violet", c.Get(6), "Cache did not contain key 6");
-            SimpleLRUCacheTests.DumpCache(c, "Least Used to Most Used");
+            Assert.AreEqual("Red", c.Get(0).Value, "Cache did not contain key 0");
+            Assert.AreEqual("Violet", c.Get(6).Value, "Cache did not contain key 6");
+            SimpleLRUCacheTests_lockfree.DumpCache(c, "Most Used/ Recently added to Least used/Oldest ");
             Console.WriteLine("Test Complete.");
         }
 
-        [TestMethod]
-        public void TestMaxSize_Cleanup()
+        public void Put_and_Replace(ILRUCache<SimpleLRUCacheItem, int> c)
         {
-            var c = MakeRainbowCache_lock(4);
-            SimpleLRUCacheTests.DumpCache(c, "After Creation");
-            Assert.AreEqual(4, c.Count, 0, "Cache size is not 4");
-            Console.WriteLine("Test Complete.");
+            c.Put(new SimpleLRUCacheItem(10, "Dog"));
+            var numItems = c.Count;
+            Assert.AreEqual("Dog", c.Get(10).Value, "Cache did not contain key 10");
+            c.Put(new SimpleLRUCacheItem(10, "Cat")); // Dog should be replaced with "Cat"
+            Assert.AreEqual("Cat", c.Get(10).Value, "Cache did not contain key 10");
+            Assert.AreEqual(numItems, c.Count, 0, "Cache size changed");
         }
-        [TestMethod]
-        public void TestMaxSize_Find()
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="c">Expected to be empty, capacity xconstraint may impact performance</param>
+        /// <param name="NumPuts"></param>
+        public void ManyPuts(ILRUCache<SimpleLRUCacheItem, int> c, int NumPuts=1000)
         {
-            var c = MakeRainbowCache_lock(4);
-            SimpleLRUCacheTests.DumpCache(c, "After Creation");
-            try
+            for(int i=0; i < NumPuts; i++)
             {
-                var val = c.Get(0);
-                //Assert.AreEqual(4, c.Count, 0, "Cache size is not 4");
-            } catch
+                c.Put(new SimpleLRUCacheItem(i, i.ToString()));
+            }
+        }
+
+        public void ManyGets(ILRUCache<SimpleLRUCacheItem, int> c, int NumGets = 1000, int MaxKey = 1000)
+        {
+            if (c.Capacity < MaxKey)
+                throw new ArgumentOutOfRangeException();
+
+            ManyPuts(c, MaxKey);
+            for (int i = 0; i < NumGets; i++)
             {
-                // Ignore
+                var k = this.random.Next(0, MaxKey);
+                var n = c.Get(k);
+                Assert.AreEqual(k.ToString(),n.Value, "Cache did not contain key.");
             }
-            finally {
-                SimpleLRUCacheTests.DumpCache(c, "\nAfter Find");
-                Console.WriteLine("Test Complete.");
-            }
+        }
+
+        public void ParallelOperations(ILRUCache<SimpleLRUCacheItem, int> c, int NumThreads = 10)
+        {
+            int MaxKey = NumThreads * 100;
+            int NumGets = 1000;
+
+            if (c.Capacity < MaxKey)
+                throw new ArgumentOutOfRangeException();
+
+            Parallel.For(0, NumThreads, t =>
+            {
+                var maxIndex = (t * 100) + 100;
+                for (int i = (t * 100); i < maxIndex; i++)
+                {
+                    c.Put(new SimpleLRUCacheItem(i, i.ToString()));
+                }
+            });
+
+            Assert.AreEqual(MaxKey, c.Count, 0, "Cache size incorrect");
+
+            Parallel.For(0, NumThreads*10, t =>
+            {
+                for (int i = 0; i < NumGets; i++)
+                {
+                    var k = this.random.Next(0, MaxKey);
+                    var n = c.Get(k);
+                    Assert.AreEqual(k.ToString(), n.Value, "Cache did not contain key.");
+                }
+            });
+
         }
     }
 }

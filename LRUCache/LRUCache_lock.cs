@@ -46,11 +46,13 @@ namespace LRUCache
     /// 
     /// <typeparam name="K">Key</typeparam>
     /// <typeparam name="V">Value</typeparam>
-    public class LRUCache_lock<K, V> : ILRUCache<K, V>
+    public class LRUCache_lock<N, K, V> : ILRUCache<N, K>
+                                          where N : LRUCacheItem<K, V>
+                                          where K : IComparable<K>
     {
         public int Capacity { get; private set; } // Capacity can not be changed once it is specified in the constructor
-        private LinkedList<K> cache = new LinkedList<K>(); // Holds the Keys in order from (FRONT) least used to (Last) recently used/added.
-        private Dictionary<K, V> items = new Dictionary<K, V>();        // Holds the Key/Value for O(1) lookup.
+        private LinkedList<K> cache = new LinkedList<K>();  // Holds the Keys in order from (FRONT) least used to (Last) recently used/added.
+        private Dictionary<K, N> items = new Dictionary<K, N>(); // Holds the Key/Value for O(1) lookup.
         private object cache_lock = new object();
 
         public LRUCache_lock(int capacity = 10)
@@ -64,7 +66,7 @@ namespace LRUCache
             {
                 lock (cache_lock)
                 {
-                    return cache.Count;
+                    return items.Count;
                 }
             }
         }
@@ -73,14 +75,14 @@ namespace LRUCache
         /// </summary>
         /// <param name="key">Required, may not be null</param>
         /// <returns></returns>
-        public V Get(K key)
+        public N Get(K key)
         {
             if (key == null)
                 throw new ArgumentNullException();
 
             lock (cache_lock)
             {
-                V value;
+                N value;
                 if (items.TryGetValue(key, out value) == true)
                 {
 
@@ -95,26 +97,26 @@ namespace LRUCache
 
 
 
-        public void Put(K key, V Value)
+        public void Put(N item)
         {
-            if ((key == null) || (Value == null))
+            if ((item == null) || (item.Key == null) || (item.Value == null))
                 throw new ArgumentNullException();
 
             lock (cache_lock)
             {
                 // Does the Key already exist? If so just update the value and move it to end of the list.
                 // This operation can not change the list of the list so we don't care about capacity.
-                if (items.ContainsKey(key) == true)
+                if (items.ContainsKey(item.Key) == true)
                 {
-                    items[key] = Value; // Update the value 
-                    cache.Remove(key); // Remove it from the someplace in the list
-                    cache.AddLast(key); // Add it to the END of the list
+                    items[item.Key].Value = item.Value; // Update the value 
+                    cache.Remove(item.Key); // Remove it from the someplace in the list
+                    cache.AddLast(item.Key); // Add it to the END of the list
                     return;
                 }
 
                 // Add new Node
-                items[key] = Value;
-                cache.AddLast(key); // Add it to the END of the list
+                items[item.Key] = item;
+                cache.AddLast(item.Key); // Add it to the END of the list
 
                 // Check to see if the cache has reached it's capacity
                 if (cache.Count > Capacity)
@@ -126,16 +128,19 @@ namespace LRUCache
             }
         }
 
-        public List<KeyValuePair<K, V>> ToList()
+        public List<N> ToList()
         {
-            var list = new List<KeyValuePair<K, V>>();
+            var list = new List<N>();
             lock (cache_lock)
             {
                 // Loop from least used to Most Used
-                foreach (var i in cache)
+                foreach (K i in cache)
                 {
-                    var t = new KeyValuePair<K, V>(i, items[i]);
-                    list.Add(t);
+                    N value;
+                    if (items.TryGetValue(i, out value) == true)
+                    {
+                        list.Add(value);
+                    }
                 }
             }
             return list;

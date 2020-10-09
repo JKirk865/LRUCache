@@ -5,20 +5,11 @@ namespace LRUCache
 {
     /// <summary>
     /// The purpose of this interface class was to assist with testing different implementations of an LRUCache.
+    /// In the future consider adding Clear, Remove (N)
     /// </summary>
-    /// <typeparam name="TKey"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
-    public interface ILRUCache<TKey, TValue>
-    {
-        int Capacity { get; }
-        int Count { get; }
-        TValue Get(TKey key);
-        void Put(TKey key, TValue value);
-        public List<KeyValuePair<TKey, TValue>> ToList(); // I chose not to use IEnumerable for threading reasons
-    }
-
-    //public interface ILRUCache2<N, TKey, TValue> where N : ILRUCacheItem<TKey, TValue>
-    public interface ILRUCache2<N, TKey>
+    /// <typeparam name="N">A "node" class inheriting from LRUCacheItem<TKey, TValue></typeparam>
+    /// <typeparam name="TKey">The type of the key field used in the LRUCacheItem</typeparam>
+    public interface ILRUCache<N, TKey>
     {
         int Capacity { get; }
         int Count { get; }
@@ -26,5 +17,4 @@ namespace LRUCache
         void Put(N item);
         public List<N> ToList(); // I chose not to use IEnumerable for threading reasons
     }
-
 }
