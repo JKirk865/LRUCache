@@ -54,18 +54,20 @@ Define the object to be cached and inherit from the LRUCacheItem. The key must b
 ```
 **Second**
 Instantiate the class but be sure to use the ILRUCache so you can change which implementation you are using.**
+```
        ILRUCache<SimpleLRUCacheItem, int> c = new LRUCache_lockfree<SimpleLRUCacheItem, int, string>(int Capacity = 10);
        The generic takes three arguments:
          N => The object to be cached
          K => The type of the Key that will be used
          V => The type of the value object that will be stored
-
+```
 **Usage**
-  c.Put(new SimpleLRUCacheItem(1, "Red"));
-  var numItems = c.Count;
-  SimpleLRUCacheItem n = c.Get(1);
-  List<SimpleLRUCacheItem> itemList = c.ToList(); // Note, the first item in the list is the oldest
-
+```
+    c.Put(new SimpleLRUCacheItem(1, "Red"));
+    var numItems = c.Count;
+    SimpleLRUCacheItem n = c.Get(1);
+    List<SimpleLRUCacheItem> itemList = c.ToList(); // Note, the first item in the list is the oldest
+```
 ## Unit Tests
 For now the unit tests are just the ad hoc test ideas I had during development to target specific areas. For complete unit tests
 could probably be done in the future to ensure 100% code coverage.
