@@ -41,7 +41,6 @@ now use an *Interlocked.Increment* to keep track of the size.
 ## Usage Examples
 
 **First define the object to be cached and inherit from the LRUCacheItem. The key must be comparable(int, Guid, etc.)
-    ```c#
     public class SimpleLRUCacheItem : LRUCacheItem<int, string>
     {
         public SimpleLRUCacheItem(int key, string value)
@@ -50,22 +49,26 @@ now use an *Interlocked.Increment* to keep track of the size.
             // Nothing to do here
         }
     }
-    ```
 
 **Second Instantiate the class but be sure to use the ILRUCache so you can change which implementation you are using.
-       ILRUCache<SimpleLRUCacheItem, int> c = new LRUCache_lockfree<SimpleLRUCacheItem, int, string>();
+       ILRUCache<SimpleLRUCacheItem, int> c = new LRUCache_lockfree<SimpleLRUCacheItem, int, string>(int Capacity = 10);
        The generic takes three arguments:
-       N => The object to be cached
-       K => The type of the Key that will be used
-       V => The type of the value object that will be stored
+         N => The object to be cached
+         K => The type of the Key that will be used
+         V => The type of the value object that will be stored
 
+** Usage
+  c.Put(new SimpleLRUCacheItem(1, "Red"));
+  var numItems = c.Count;
+  SimpleLRUCacheItem n = c.Get(1);
+  List<SimpleLRUCacheItem> itemList = c.ToList(); // Note, the first item in the list is the oldest
 
 ## Unit Tests
 For now the unit tests are just the ad hoc test ideas I had during development to target specific areas. For complete unit tests
 could probably be done in the future to ensure 100% code coverage.
 
 ## Architecture
-Both implementations use a similar architecture. A dictionary is used to hold each Key/Value for fast lookup, and a second linked
+Both implementations use a similar architecture. A dictionary is used to hold each Key/Value for fast O(1) lookup, and a second linked
 list that just carries the Key is used to maintain order, from oldest (Left) to newest(Right). This means that the key/value may be
 stored twice but the performance is much better than a single linked list could ever achieve.
 
