@@ -69,6 +69,12 @@ namespace LRUCacheTests
             }
         }
         [TestMethod]
+        public void RemoveTest()
+        {
+            var c = new LRUCache_lock<SimpleLRUCacheItem, int, string>(10);
+            RemoveTest(c);
+        }
+        [TestMethod]
         public void ManyPuts10k()
         {
             var c = new LRUCache_lock<SimpleLRUCacheItem, int, string>(1000);

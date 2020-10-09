@@ -70,6 +70,25 @@ namespace LRUCacheTests
             Assert.AreEqual(numItems, c.Count, 0, "Cache size changed");
         }
 
+        public void RemoveTest(ILRUCache<SimpleLRUCacheItem, int> c)
+        {
+            var dog = new SimpleLRUCacheItem(10, "Dog");
+            c.Put(dog);
+            var numItems = c.Count;
+            Assert.AreEqual("Dog", c.Get(dog.Key).Value, "Cache did not contain dog");
+            var wasRemoved = c.Remove(dog.Key);
+            Assert.IsTrue(wasRemoved); // Was it successfully removed?
+            try
+            {
+                var dog2 = c.Get(10); // Try to get dogs Key
+                Assert.IsTrue(true, "Dog was found but not expected");
+            } catch (KeyNotFoundException kex)
+            {
+                // OK!
+            }
+
+        }
+
         /// <summary>
         /// 
         /// </summary>

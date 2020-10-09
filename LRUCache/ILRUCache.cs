@@ -10,6 +10,7 @@ namespace LRUCache
         int Count { get; }
         N Get(TKey key);
         void Put(N item);
+        bool Remove(TKey key);
         public List<N> ToList(); // I chose not to use IEnumerable for threading reasons
     }
 }

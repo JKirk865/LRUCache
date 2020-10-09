@@ -44,7 +44,6 @@ list that just carries the Key is used to maintain order, from oldest (Left) to 
 stored twice but the performance is much better than a single linked list could ever achieve.
 
 ## Usage
-
 **First**
 Define the object to be cached and inherit from the LRUCacheItem. The key must be comparable(i.e. int, Guid)
 ```

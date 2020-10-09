@@ -27,9 +27,18 @@ namespace LRUCache
                 return false;
             }
 
-            LRUCacheItem<K, V> objAsLid = obj as LRUCacheItem<K, V>;
+            LRUCacheItem<K, V> objAsItem = obj as LRUCacheItem<K, V>;
+            return Key.Equals(objAsItem.Key) && Value.Equals(objAsItem.Value);
+        }
 
-            return Key.Equals(objAsLid.Key) && Value.Equals(objAsLid.Value);
+        /// <summary>
+        /// This is not an ideal Hash code function, consider replacing it with something better,
+        /// this was here mostly to fixc the warning.
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return Key.GetHashCode() ^ Value.GetHashCode();
         }
     }
 }
