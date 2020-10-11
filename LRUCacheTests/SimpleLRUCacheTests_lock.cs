@@ -92,5 +92,11 @@ namespace LRUCacheTests
             var c = new LRUCache_lock<SimpleLRUCacheItem, int, string>(1000);
             ParallelOperations(c);
         }
+        [TestMethod]
+        public void ExpirationTest1()
+        {
+            var c = new LRUCache_lock<SimpleLRUCacheItem, int, string>(10);
+            ExpirationTest(c);
+        }
     }
 }

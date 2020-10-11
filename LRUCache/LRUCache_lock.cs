@@ -27,6 +27,7 @@ namespace LRUCache
             {
                 lock (cache_lock)
                 {
+                    RemoveExpired();
                     return items.Count;
                 }
             }

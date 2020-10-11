@@ -1,6 +1,7 @@
 ﻿using LRUCache;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Threading;
 
 namespace LRUCacheTests
 {
@@ -94,6 +95,28 @@ namespace LRUCacheTests
         {
             var c = new LRUCache_lockfree<SimpleLRUCacheItem, int, string>(1000);
             ParallelOperations(c);
+        }
+        [TestMethod]
+        public void ExpirationTest1()
+        {
+            var c = new LRUCache_lockfree<SimpleLRUCacheItem, int, string>(10);
+            c.Put(new SimpleLRUCacheItem(1, "Cat", new TimeSpan(0, 0, 5))); // 5 second timespan
+            Assert.AreEqual(1, c.Count);
+            Thread.Sleep(1 * 1000); // Sleep for 5 seconds.
+            Assert.AreEqual(1, c.Count);
+            Assert.AreEqual("Cat", c.Get(1).Value);
+            Thread.Sleep(4 * 1000); // Sleep for 5 seconds.
+            Assert.AreEqual(1, c.Count);
+            Thread.Sleep(1 * 1000); // Sleep for 5 seconds.
+            try
+            {
+                var val = c.Get(1);
+                Assert.IsTrue(true, "Cat should no longer be present");
+            }
+            catch
+            {
+                // Ignore
+            }
         }
     }
 }

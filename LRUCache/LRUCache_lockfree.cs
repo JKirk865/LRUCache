@@ -104,6 +104,11 @@ namespace LRUCache
 
             return false;
         }
+        /// <summary>
+        /// Not Thread-Safe
+        /// This may throw an exception if another thread adds an item while in this loop. 
+        /// </summary>
+        /// <returns></returns>
         public List<N> ToList()
         {
             var list = new List<N>();
