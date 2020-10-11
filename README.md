@@ -43,11 +43,11 @@ Both implementations use a similar architecture. A dictionary is used to hold ea
 list that just carries the Key is used to maintain order, from oldest (Left) to newest(Right). This means that the key/value may be
 stored twice but the performance is much better than a single linked list could ever achieve.
 
-**Expiration
+**Expiration**
 The Expiration support varies between the two implementations. The "LRUCache_lock" contains a method to remove the expires nodes
 named *RemoveExpired()* which is automatically called in the Count property. Due to the nature of "LRUCache_nolock" this is not
 possible. The "LRUCache_nolock" implantation will not return a expired node, but it will keep them and consider them part of the
-Count at this time.
+Count until they are ejected due to capacity or an attempt to Get them.
 
 ## Usage
 **First**
