@@ -31,15 +31,6 @@ namespace LRUCache
                 }
             }
         }
-        public void Clear()
-        {
-            lock (cache_lock)
-            {
-                cache.Clear();
-                items.Clear();
-            }
-        }
-
         public N Get(K key)
         {
             if (key == null)
@@ -50,9 +41,14 @@ namespace LRUCache
                 N value;
                 if (items.TryGetValue(key, out value) == true)
                 {
-
+                    if (value.IsExpired)
+                    {
+                        items.Remove(key);
+                        throw new KeyNotFoundException(string.Format("Key expired: {0}", key.ToString()));
+                    }
                     cache.Remove(key); // Remove it from the someplace in the list
                     cache.AddLast(key); // Add it to the END of the list
+                    value.UpdateExpiration();
                     return value;
                 }
             }
@@ -67,12 +63,14 @@ namespace LRUCache
 
             lock (cache_lock)
             {
+                item.UpdateExpiration();
+
                 // Does the Key already exist? If so just update the value and move it to end of the list.
                 // Cache size is not changed.
                 if (items.ContainsKey(item.Key) == true)
                 {
                     items[item.Key].Value = item.Value; // Update the value 
-                    cache.Remove(item.Key); // Remove it from the someplace in the list
+                    cache.Remove(item.Key); // Remove it from someplace in the list
                     cache.AddLast(item.Key); // Add it to the END of the list
                     return;
                 }
@@ -84,7 +82,7 @@ namespace LRUCache
                 // Check to see if the cache has reached it's capacity
                 if (cache.Count > Capacity)
                 {
-                    // Remove the first item from Cache and it's sibling Value in items becasue it's the oldest
+                    // Remove the first item from Cache and it's sibling Value in items because it's the oldest
                     items.Remove(cache.First.Value);
                     cache.RemoveFirst();
                 }
@@ -125,5 +123,41 @@ namespace LRUCache
             }
             return list;
         }
+        
+        #region Extra Features that can't be added to lockfree version
+        /// <summary>
+        /// I can not yet think of a lockfree way to add these two additional calls.
+        /// </summary>
+        public void Clear()
+        {
+            lock (cache_lock)
+            {
+                cache.Clear();
+                items.Clear();
+            }
+        }
+
+        public int RemoveExpired()
+        {
+            var RemoveList = new List<N>();
+            int ExpiredItems = 0;
+
+            lock (cache_lock)
+            {
+                foreach (var item in items)
+                {
+                    if (item.Value.IsExpired)
+                    {
+                        cache.Remove(item.Key);
+                        RemoveList.Add(item.Value);
+                    }
+                }
+                ExpiredItems = RemoveList.Count;
+                foreach (var N in RemoveList)
+                    items.Remove(N.Key);
+                return ExpiredItems;
+            }
+        }
+        #endregion
     }
 }

@@ -27,8 +27,7 @@ namespace LRUCache
             Capacity = capacity;
         }
         public int Count
-        {
-            
+        {            
             get => NumRecords;
         }
 
@@ -40,7 +39,12 @@ namespace LRUCache
             ILockFreeDoublyLinkedListNode<N> value;
             if (items.TryGetValue(key, out value) == true)
             {
-                value.Remove(); // Remove it from the someplace in the list
+                value.Remove(); // Remove it from the someplace in the "cache" list
+                if (value.Value.IsExpired)
+                {
+                    items.TryRemove(key, out value);
+                    throw new KeyNotFoundException(string.Format("Key expired: {0}", key.ToString()));
+                }
                 value = cache.PushLeft(value.Value); // Add it to the left side
                 return value.Value;
             }
@@ -52,6 +56,8 @@ namespace LRUCache
         {
             if ((item == null) || (item.Key == null) || (item.Value == null))
                 throw new ArgumentNullException();
+
+            item.UpdateExpiration();
 
             // Does the Key already exist? If so just update the value and move it to end of the list.
             // The cache size does not change.
@@ -102,7 +108,7 @@ namespace LRUCache
         {
             var list = new List<N>();
             
-            // Loop from least used to Most Used
+            // Loop from Least used to Most Used
             foreach (N i in cache)
             {
                 list.Add(i);
