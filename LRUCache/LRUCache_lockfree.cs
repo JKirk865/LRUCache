@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using LockFreeDoublyLinkedLists;
 
@@ -104,21 +105,54 @@ namespace LRUCache
 
             return false;
         }
+
+        #region Extra Features that are not Thread Safe, Use at your own risk!
         /// <summary>
         /// Not Thread-Safe
-        /// This may throw an exception if another thread adds an item while in this loop. 
         /// </summary>
-        /// <returns></returns>
+
         public List<N> ToList()
         {
             var list = new List<N>();
-            
+
             // Loop from Least used to Most Used
+            // This loop may throw an exception if an item is added from another thread while iterating over this list
             foreach (N i in cache)
             {
                 list.Add(i);
             }
             return list;
         }
+
+        public void Clear()
+        {
+            while (cache.Count() > 0)
+                cache.PopRightNode();
+            items.Clear();
+        }
+
+        public int RemoveExpired()
+        {
+            var RemoveList = new List<N>();
+            int ExpiredItems = 0;
+
+            foreach (var item in items)
+            {
+                if (item.Value.Value.IsExpired)
+                {
+                    item.Value.Remove();
+                    RemoveList.Add(item.Value.Value);
+                }
+            }
+            ExpiredItems = RemoveList.Count;
+            foreach (var N in RemoveList)
+            {
+                ILockFreeDoublyLinkedListNode<N> node;
+                items.TryRemove(N.Key, out node);
+            }
+            
+            return ExpiredItems;
+        }
+        #endregion
     }
 }
