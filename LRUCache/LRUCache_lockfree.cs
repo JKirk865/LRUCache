@@ -150,7 +150,7 @@ namespace LRUCache
                 ILockFreeDoublyLinkedListNode<N> node;
                 items.TryRemove(N.Key, out node);
             }
-            
+
             return ExpiredItems;
         }
         #endregion

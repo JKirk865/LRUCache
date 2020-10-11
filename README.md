@@ -74,8 +74,8 @@ Instantiate the class but be sure to use the ILRUCache so you can change which i
 ```
 **Examples**
 ```
-    c.Put(new SimpleLRUCacheItem(1, "Red")); // Becomes the Left most item
-    c.Put(new SimpleLRUCacheItem(2, "Blue", new TimeSpan(0,0,5))); // Becomes the Left most item with 5 second lifetime
+    c.Put(new SimpleLRUCacheItem(1, "Red")); // Becomes the Left most item with no expiration date
+    c.Put(new SimpleLRUCacheItem(2, "Blue", new TimeSpan(0,0,5))); // Becomes the Left most item with a 5 second lifetime
     var numItems = c.Count;
     SimpleLRUCacheItem n = c.Get(1); // After found, becomes the Left most item
     List<SimpleLRUCacheItem> itemList = c.ToList(); // Note, the first item in the list is the oldest
