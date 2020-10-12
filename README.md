@@ -1,5 +1,5 @@
 # LRUCache
-A C# .Net Core implementation of a LRUCache with UnitTests.
+A C# .Net Core implementation of a LRUCache with optional expiration.
 
 ## What is an LRU Cache?
 A Least Recently Used (LRU) Cache organizes items in order of use, allowing you to quickly identify which
@@ -43,14 +43,20 @@ Both implementations use a similar architecture. A dictionary is used to hold ea
 list that just carries the Key is used to maintain order, from oldest (Left) to newest(Right). This means that the key/value may be
 stored twice but the performance is much better than a single linked list could ever achieve.
 
+**Expiration**
+The Expiration support varies between the two implementations. The "LRUCache_lock" contains a method to remove the expires nodes
+named *RemoveExpired()* which is automatically called in the Count property. Due to the nature of "LRUCache_nolock" this is not
+possible. The "LRUCache_nolock" implantation will not return a expired node, but it will keep them and consider them part of the
+Count until they are ejected due to capacity or an attempt to Get them.
+
 ## Usage
 **First**
 Define the object to be cached and inherit from the LRUCacheItem class. The key must be comparable(i.e. int, Guid)
 ```
     public class SimpleLRUCacheItem : LRUCacheItem<int, string>
     {
-        public SimpleLRUCacheItem(int key, string value)
-            : base(key, value)
+        public SimpleLRUCacheItem(int key, string value, TimeSpan? lifetime = null)
+            : base(key, value, lifetime)
         {
             // Nothing to do here
         }
@@ -68,7 +74,8 @@ Instantiate the class but be sure to use the ILRUCache so you can change which i
 ```
 **Examples**
 ```
-    c.Put(new SimpleLRUCacheItem(1, "Red")); // Becomes the Left most item
+    c.Put(new SimpleLRUCacheItem(1, "Red")); // Becomes the Left most item with no expiration date
+    c.Put(new SimpleLRUCacheItem(2, "Blue", new TimeSpan(0,0,5))); // Becomes the Left most item with a 5 second lifetime
     var numItems = c.Count;
     SimpleLRUCacheItem n = c.Get(1); // After found, becomes the Left most item
     List<SimpleLRUCacheItem> itemList = c.ToList(); // Note, the first item in the list is the oldest
@@ -78,8 +85,7 @@ For now the unit tests are just ad hoc test ideas I had during development to ta
 could be added in the future to ensure 100% code coverage.
 
 ## Future Features
-1. Add expiration date to each node, handy to ensure cache'd item is not too old.
-2. Compare this implementation with the others on NuGet.
+
 
 ## Class Diagram
 ![Class Diagram](/ClassDiagram.png)

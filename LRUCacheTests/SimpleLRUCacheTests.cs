@@ -3,20 +3,20 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LRUCacheTests
 {
     public class SimpleLRUCacheItem : LRUCacheItem<int, string>
     {
-        public SimpleLRUCacheItem(int key, string value)
-            : base(key, value)
+        public SimpleLRUCacheItem(int key, string value, TimeSpan? lifetime = null)
+            : base(key, value, lifetime)
         {
             // Nothing to do here
         }
     }
-
- 
+     
     public abstract class SimpleLRUCacheTests
     {
         Random random = new Random(Guid.NewGuid().GetHashCode());
@@ -88,9 +88,6 @@ namespace LRUCacheTests
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="c">Expected to be empty, capacity constraint may impact performance</param>
         /// <param name="NumPuts"></param>
         public void ManyPuts(ILRUCache<SimpleLRUCacheItem, int> c, int NumPuts=1000)
@@ -143,7 +140,20 @@ namespace LRUCacheTests
                     Assert.AreEqual(k.ToString(), n.Value, "Cache did not contain key.");
                 }
             });
+        }
 
+        /// <param name="c">Expect the cache to be empty with a capacity of at least 10</param>
+        public void ExpirationTest(ILRUCache<SimpleLRUCacheItem, int> c)
+        {
+            c.Put(new SimpleLRUCacheItem(1, "Cat", new TimeSpan(0, 0, 5))); // 5 second timespan
+            Assert.AreEqual(1, c.Count);
+            Thread.Sleep(1 * 1000); // Sleep for 5 seconds.
+            Assert.AreEqual(1, c.Count);
+            Assert.AreEqual("Cat", c.Get(1).Value);
+            Thread.Sleep(4 * 1000); // Sleep for 5 seconds.
+            Assert.AreEqual(1, c.Count);
+            Thread.Sleep(1 * 1000); // Sleep for 5 seconds.
+            Assert.AreEqual(0, c.Count);
         }
     }
 }

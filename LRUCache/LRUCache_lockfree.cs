@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using LockFreeDoublyLinkedLists;
 
@@ -27,8 +28,7 @@ namespace LRUCache
             Capacity = capacity;
         }
         public int Count
-        {
-            
+        {            
             get => NumRecords;
         }
 
@@ -40,7 +40,12 @@ namespace LRUCache
             ILockFreeDoublyLinkedListNode<N> value;
             if (items.TryGetValue(key, out value) == true)
             {
-                value.Remove(); // Remove it from the someplace in the list
+                value.Remove(); // Remove it from the someplace in the "cache" list
+                if (value.Value.IsExpired)
+                {
+                    items.TryRemove(key, out value);
+                    throw new KeyNotFoundException(string.Format("Key expired: {0}", key.ToString()));
+                }
                 value = cache.PushLeft(value.Value); // Add it to the left side
                 return value.Value;
             }
@@ -52,6 +57,8 @@ namespace LRUCache
         {
             if ((item == null) || (item.Key == null) || (item.Value == null))
                 throw new ArgumentNullException();
+
+            item.UpdateExpiration();
 
             // Does the Key already exist? If so just update the value and move it to end of the list.
             // The cache size does not change.
@@ -98,16 +105,54 @@ namespace LRUCache
 
             return false;
         }
+
+        #region Extra Features that are not Thread Safe, Use at your own risk!
+        /// <summary>
+        /// Not Thread-Safe
+        /// </summary>
+
         public List<N> ToList()
         {
             var list = new List<N>();
-            
-            // Loop from least used to Most Used
+
+            // Loop from Least used to Most Used
+            // This loop may throw an exception if an item is added from another thread while iterating over this list
             foreach (N i in cache)
             {
                 list.Add(i);
             }
             return list;
         }
+
+        public void Clear()
+        {
+            while (cache.Count() > 0)
+                cache.PopRightNode();
+            items.Clear();
+        }
+
+        public int RemoveExpired()
+        {
+            var RemoveList = new List<N>();
+            int ExpiredItems = 0;
+
+            foreach (var item in items)
+            {
+                if (item.Value.Value.IsExpired)
+                {
+                    item.Value.Remove();
+                    RemoveList.Add(item.Value.Value);
+                }
+            }
+            ExpiredItems = RemoveList.Count;
+            foreach (var N in RemoveList)
+            {
+                ILockFreeDoublyLinkedListNode<N> node;
+                items.TryRemove(N.Key, out node);
+            }
+
+            return ExpiredItems;
+        }
+        #endregion
     }
 }

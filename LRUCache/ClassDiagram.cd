@@ -1,17 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Comment CommentText="Thse methods are not thread-safe: Clear, ToList, and RemoveExpired">
+    <Position X="12.875" Y="5.99" Height="0.75" Width="1.7" />
+  </Comment>
   <Class Name="LRUCache.LRUCache_lock&lt;N, K, V&gt;">
     <Position X="7.5" Y="2" Width="2" />
+    <InheritanceLine Type="System.Object" FixedToPoint="true">
+      <Path>
+        <Point X="5.5" Y="1.312" />
+        <Point X="5.5" Y="1.625" />
+        <Point X="9.062" Y="1.625" />
+        <Point X="9.062" Y="2" />
+      </Path>
+    </InheritanceLine>
     <TypeIdentifier>
-      <HashCode>ACAAAAAAAAAAAABAAAgABASCAAAAAAAAAAgAAABAAAg=</HashCode>
+      <HashCode>ACAAAAAAAAAAAABAAAgABASCAAAAAAAAEAgAAABAAAg=</HashCode>
       <FileName>LRUCache_lock.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.1" />
   </Class>
   <Class Name="LRUCache.LRUCache_lockfree&lt;N, K, V&gt;">
     <Position X="10.5" Y="3.25" Width="2.25" />
+    <InheritanceLine Type="System.Object" FixedToPoint="true">
+      <Path>
+        <Point X="5.5" Y="1.312" />
+        <Point X="5.5" Y="1.625" />
+        <Point X="11.938" Y="1.625" />
+        <Point X="11.938" Y="3.25" />
+      </Path>
+    </InheritanceLine>
     <TypeIdentifier>
-      <HashCode>ACAAAAAAAAEAAABAAAgAAAQCAAAAAAAAAAgAAAAAAAg=</HashCode>
+      <HashCode>ACAAAAAAAAEAAABAAAgABAQCAAAAAAAAEAgAAABAAAg=</HashCode>
       <FileName>LRUCache_lockfree.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.1" />
@@ -19,7 +38,7 @@
   <Class Name="LRUCache.LRUCacheItem&lt;K, V&gt;">
     <Position X="5" Y="5.25" Width="1.75" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAQAgAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <HashCode>AIAAAAAIAAAAAAYAgAAAAAAAAAAAAIAAAEAgAAAAAAA=</HashCode>
       <FileName>LRUCacheItem.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
@@ -31,14 +50,14 @@
   <Interface Name="LRUCache.ILRUCache&lt;N, TKey&gt;">
     <Position X="2" Y="1.5" Width="1.75" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAABAAAAAAAQCAAAAAAAAAAgAAAAAAAg=</HashCode>
+      <HashCode>AAAAAAAAAAAAAABAAAAABAQCAAAAAAAAAAgAAAAAAAg=</HashCode>
       <FileName>ILRUCache.cs</FileName>
     </TypeIdentifier>
   </Interface>
   <Interface Name="LRUCache.ILRUCacheItem&lt;K, V&gt;">
     <Position X="2" Y="4.25" Width="1.75" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <HashCode>AIAAAAAIAAAAAAYAAAAAAAAAAAAAAAAAAEAgAAAAAAA=</HashCode>
       <FileName>LRUCacheItem.cs</FileName>
     </TypeIdentifier>
   </Interface>
